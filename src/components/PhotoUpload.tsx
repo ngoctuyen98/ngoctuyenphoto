@@ -28,6 +28,15 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
@@ -70,13 +79,18 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
     setLoading(true);
 
     try {
-      // Create photo objects with the preview URLs (simulating upload)
+      // Convert all files to base64
+      const base64Images = await Promise.all(
+        selectedFiles.map(file => convertFileToBase64(file))
+      );
+
+      // Create photo objects with base64 data
       const uploadedPhotos = selectedFiles.map((file, index) => ({
         id: Date.now() + index,
         title: selectedFiles.length === 1 ? title : `${title} ${index + 1}`,
         description,
         category,
-        url: previewUrls[index],
+        url: base64Images[index], // Use base64 instead of blob URL
         fileName: file.name,
         uploadedAt: new Date().toISOString()
       }));
@@ -97,6 +111,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       
       onUploadSuccess(uploadedPhotos);
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload failed",
         description: "There was an error uploading your photos.",
