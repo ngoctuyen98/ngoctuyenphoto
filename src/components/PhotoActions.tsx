@@ -114,7 +114,8 @@ const PhotoActions = ({ photo, onPhotoUpdate }: PhotoActionsProps) => {
   const handleEditorSave = (updatedPhoto: any) => {
     updatePhoto({
       title: updatedPhoto.title,
-      description: updatedPhoto.description
+      description: updatedPhoto.description,
+      category: updatedPhoto.category
     });
     setShowEditor(false);
   };

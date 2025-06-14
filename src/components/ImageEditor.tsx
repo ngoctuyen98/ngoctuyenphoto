@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, X, Edit3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,9 +26,24 @@ interface ImageEditorProps {
   onSave: (updatedPhoto: Photo) => void;
 }
 
+const CATEGORIES = [
+  'Landscape',
+  'Portrait',
+  'Nature',
+  'Architecture',
+  'Street',
+  'Wildlife',
+  'Abstract',
+  'Travel',
+  'Macro',
+  'Black & White',
+  'Other'
+];
+
 const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
   const [title, setTitle] = useState(photo.title);
   const [description, setDescription] = useState(photo.description);
+  const [category, setCategory] = useState(photo.category);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -36,6 +52,7 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
     if (isOpen) {
       setTitle(photo.title);
       setDescription(photo.description);
+      setCategory(photo.category);
     }
   }, [isOpen, photo]);
 
@@ -49,19 +66,29 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
       return;
     }
 
+    if (!category) {
+      toast({
+        title: "Category required",
+        description: "Please select a category for the photo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const updatedPhoto: Photo = {
         ...photo,
         title: title.trim(),
-        description: description.trim()
+        description: description.trim(),
+        category: category
       };
 
       onSave(updatedPhoto);
       
       toast({
         title: "Photo updated",
-        description: "Photo title and description have been successfully updated."
+        description: "Photo details have been successfully updated."
       });
     } catch (error) {
       console.error('Error saving photo:', error);
@@ -121,6 +148,23 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
             </div>
 
             <div>
+              <label className="text-sm font-medium mb-2 block">Category *</label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="focus:ring-2 focus:ring-gray-500">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!category && <span className="text-xs text-red-500 mt-1 block">Category is required</span>}
+            </div>
+
+            <div>
               <label className="text-sm font-medium mb-2 block">Description</label>
               <Textarea
                 value={description}
@@ -139,7 +183,7 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
             <Button 
               onClick={handleSave} 
               className="flex-1"
-              disabled={saving || !title.trim()}
+              disabled={saving || !title.trim() || !category}
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Changes'}
