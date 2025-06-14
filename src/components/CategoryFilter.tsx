@@ -1,4 +1,3 @@
-
 interface CategoryFilterProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
@@ -8,14 +7,8 @@ const categories = [
   { id: 'all', name: 'All' },
   { id: 'Portrait', name: 'Portrait' },
   { id: 'Landscape', name: 'Landscape' },
-  { id: 'Nature', name: 'Nature' },
-  { id: 'Architecture', name: 'Architecture' },
   { id: 'Street', name: 'Street' },
-  { id: 'Wildlife', name: 'Wildlife' },
-  { id: 'Abstract', name: 'Abstract' },
   { id: 'Travel', name: 'Travel' },
-  { id: 'Macro', name: 'Macro' },
-  { id: 'Black & White', name: 'Black & White' },
   { id: 'Other', name: 'Other' }
 ];
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,16 +26,10 @@ interface ImageEditorProps {
 }
 
 const CATEGORIES = [
-  'Landscape',
   'Portrait',
-  'Nature',
-  'Architecture',
+  'Landscape',
   'Street',
-  'Wildlife',
-  'Abstract',
   'Travel',
-  'Macro',
-  'Black & White',
   'Other'
 ];
 
