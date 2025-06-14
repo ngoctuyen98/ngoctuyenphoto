@@ -1,5 +1,4 @@
 
-```tsx
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -49,17 +48,16 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
 
   const toggleZoom = (event?: React.MouseEvent<HTMLImageElement>) => {
     if (!isZoomed && event) {
-      // Zooming IN
-      const imgElement = event.currentTarget;
-      // Get click coordinates relative to the image element
-      const offsetX = event.nativeEvent.offsetX;
-      const offsetY = event.nativeEvent.offsetY;
-
-      // Calculate transform origin as percentages
-      const originX = (offsetX / imgElement.offsetWidth) * 100 + '%';
-      const originY = (offsetY / imgElement.offsetHeight) * 100 + '%';
+      // Zooming IN - calculate the click position relative to the image
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
       
-      setTransformOrigin(`${originX} ${originY}`);
+      // Convert to percentages for transform-origin
+      const originX = (x / rect.width) * 100;
+      const originY = (y / rect.height) * 100;
+      
+      setTransformOrigin(`${originX}% ${originY}%`);
       setIsZoomed(true);
     } else {
       // Zooming OUT
@@ -88,7 +86,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [currentPhotoIndex, photos.length, onClose]); // Added onClose to dependencies
+  }, [currentPhotoIndex, photos.length, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -124,7 +122,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
             src={currentPhoto.src}
             alt={currentPhoto.alt}
             className={`w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ${
-              isZoomed ? 'scale-150' : 'scale-100'
+              isZoomed ? 'scale-200' : 'scale-100'
             }`}
             onClick={toggleZoom}
             style={{ transformOrigin: transformOrigin }}
@@ -157,4 +155,3 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
 };
 
 export default PhotoModal;
-```
