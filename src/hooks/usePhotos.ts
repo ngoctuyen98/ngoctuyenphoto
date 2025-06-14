@@ -22,12 +22,14 @@ export const usePhotos = () => {
 
   const getPhotoUrl = (filePath: string) => {
     const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
+    console.log('Generated photo URL:', data.publicUrl);
     return data.publicUrl;
   };
 
   const fetchPhotos = async () => {
     try {
       setLoading(true);
+      console.log('Fetching photos... User authenticated:', !!user);
       
       // Fetch photos regardless of authentication status
       // Only show non-hidden photos to maintain privacy
@@ -38,12 +40,16 @@ export const usePhotos = () => {
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
+      console.log('Supabase query result:', { data, error });
+      console.log('Number of photos found:', data ? data.length : 0);
+
       if (error) {
         console.error('Error fetching photos:', error);
         // Don't throw error for unauthenticated users, just show empty array
         setPhotos([]);
         setError(null);
       } else {
+        console.log('Setting photos:', data || []);
         setPhotos(data || []);
         setError(null);
       }
@@ -54,24 +60,30 @@ export const usePhotos = () => {
       setError(null);
     } finally {
       setLoading(false);
+      console.log('Photo fetching completed');
     }
   };
 
   useEffect(() => {
+    console.log('usePhotos hook mounted, starting fetch...');
     fetchPhotos();
   }, []); // Remove user dependency to fetch photos regardless of auth status
 
+  const mappedPhotos = photos.map(photo => ({
+    id: photo.id,
+    src: getPhotoUrl(photo.file_path),
+    alt: photo.title,
+    category: photo.category,
+    title: photo.title,
+    description: photo.description || '',
+    featured: photo.featured,
+    hidden: photo.hidden
+  }));
+
+  console.log('Returning mapped photos:', mappedPhotos.length);
+
   return {
-    photos: photos.map(photo => ({
-      id: photo.id,
-      src: getPhotoUrl(photo.file_path),
-      alt: photo.title,
-      category: photo.category,
-      title: photo.title,
-      description: photo.description || '',
-      featured: photo.featured,
-      hidden: photo.hidden
-    })),
+    photos: mappedPhotos,
     loading,
     error,
     refetch: fetchPhotos
