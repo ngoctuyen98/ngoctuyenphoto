@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { usePhotos } from '@/hooks/usePhotos';
 
 interface Photo {
   id: string;
@@ -24,98 +25,80 @@ const defaultPhotos: Photo[] = [
     alt: 'Mountain landscape',
     category: 'landscape',
     title: 'Misty Mountains',
-    description: 'Early morning fog rolling over mountain peaks'
+    description: 'Early morning fog rolling over mountain peaks',
+    featured: true
   },
   {
     id: '2',
-    src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    alt: 'Ocean wave',
-    category: 'nature',
-    title: 'Ocean Wave',
-    description: 'Powerful wave captured at the perfect moment'
+    src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    alt: 'Portrait photography',
+    category: 'portrait',
+    title: 'Natural Portrait',
+    description: 'Capturing authentic moments',
+    featured: true
   },
   {
     id: '3',
-    src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    alt: 'Forest lake',
-    category: 'landscape',
-    title: 'Forest Reflection',
-    description: 'Serene lake surrounded by autumn trees'
+    src: 'https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    alt: 'Wedding photography',
+    category: 'wedding',
+    title: 'Wedding Moments',
+    description: 'Beautiful wedding ceremony',
+    featured: true
   },
   {
     id: '4',
-    src: 'https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    alt: 'Forest sunbeam',
-    category: 'nature',
-    title: 'Forest Light',
-    description: 'Sunbeam cutting through the forest canopy'
+    src: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    alt: 'Street photography',
+    category: 'street',
+    title: 'Urban Life',
+    description: 'Capturing the essence of city life',
+    featured: true
   },
   {
     id: '5',
-    src: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    alt: 'Mountain valley',
-    category: 'landscape',
-    title: 'Valley View',
-    description: 'Aerial view of a mountain valley'
-  },
-  {
-    id: '6',
-    src: 'https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    alt: 'Rocky mountain',
-    category: 'landscape',
-    title: 'Rocky Peak',
-    description: 'Dramatic rocky mountain against the sky'
+    src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+    alt: 'Nature photography',
+    category: 'nature',
+    title: 'Ocean Wave',
+    description: 'Powerful wave captured at the perfect moment',
+    featured: true
   }
 ];
 
 const ImageSlideshow = ({ selectedCategory }: ImageSlideshowProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
   const [slideshowPhotos, setSlideshowPhotos] = useState<Photo[]>([]);
-
-  const loadUploadedPhotos = () => {
-    const savedPhotos = localStorage.getItem('uploadedPhotos');
-    if (savedPhotos) {
-      const parsedPhotos = JSON.parse(savedPhotos);
-      const convertedPhotos: Photo[] = parsedPhotos
-        .filter((photo: any) => !photo.hidden)
-        .map((photo: any) => ({
-          id: photo.id.toString(),
-          src: photo.url,
-          alt: photo.title,
-          category: photo.category,
-          title: photo.title,
-          description: photo.description,
-          featured: photo.featured
-        }));
-      setUploadedPhotos(convertedPhotos);
-    }
-  };
+  const { photos: dbPhotos } = usePhotos();
 
   useEffect(() => {
-    loadUploadedPhotos();
-
-    const handlePhotosUpdated = () => {
-      loadUploadedPhotos();
-    };
-
-    window.addEventListener('photosUpdated', handlePhotosUpdated);
-    return () => {
-      window.removeEventListener('photosUpdated', handlePhotosUpdated);
-    };
-  }, []);
-
-  useEffect(() => {
-    const allPhotos = [...uploadedPhotos, ...defaultPhotos];
-    const filteredPhotos = selectedCategory === 'all' 
-      ? allPhotos 
-      : allPhotos.filter(photo => photo.category === selectedCategory);
+    // Combine database photos with default photos
+    const allPhotos = [...dbPhotos, ...defaultPhotos];
     
-    // Shuffle the photos randomly
-    const shuffled = [...filteredPhotos].sort(() => Math.random() - 0.5);
-    setSlideshowPhotos(shuffled);
+    // Get only featured photos
+    const featuredPhotos = allPhotos.filter(photo => photo.featured);
+    
+    if (selectedCategory === 'all') {
+      // For 'all' category, show one featured photo per category
+      const categories = ['portrait', 'landscape', 'wedding', 'street', 'nature'];
+      const categoryFeatured: Photo[] = [];
+      
+      categories.forEach(category => {
+        const categoryPhoto = featuredPhotos.find(photo => photo.category === category);
+        if (categoryPhoto) {
+          categoryFeatured.push(categoryPhoto);
+        }
+      });
+      
+      setSlideshowPhotos(categoryFeatured);
+    } else {
+      // For specific category, show all featured photos from that category
+      const categoryFeatured = featuredPhotos.filter(photo => photo.category === selectedCategory);
+      setSlideshowPhotos(categoryFeatured);
+    }
+    
     setCurrentIndex(0);
-  }, [selectedCategory, uploadedPhotos]);
+  }, [selectedCategory, dbPhotos]);
 
   useEffect(() => {
     if (slideshowPhotos.length > 1) {
