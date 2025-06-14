@@ -1,5 +1,5 @@
 
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Photo {
@@ -18,79 +18,140 @@ interface PhotoModalProps {
 }
 
 const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
-  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [zoomStyle, setZoomStyle] = useState<{
-    transform: string;
-    transformOrigin: string;
-  }>({
-    transform: 'scale(1)',
-    transformOrigin: 'center center'
-  });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [transformOrigin, setTransformOrigin] = useState('center center');
+
+  const zoomLevels = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
+  const maxZoom = 5;
+  const minZoom = 0.25;
 
   // Find the current photo index when the modal opens or photo changes
   useEffect(() => {
     const index = photos.findIndex(p => p.id === photo.id);
     setCurrentPhotoIndex(index);
-    setIsZoomed(false);
-    setZoomStyle({
-      transform: 'scale(1)',
-      transformOrigin: 'center center'
-    });
+    resetZoom();
   }, [photo, photos]);
 
   const currentPhoto = photos[currentPhotoIndex] || photo;
 
+  const resetZoom = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setTransformOrigin('center center');
+  };
+
   const goToPrevious = () => {
     const newIndex = currentPhotoIndex > 0 ? currentPhotoIndex - 1 : photos.length - 1;
     setCurrentPhotoIndex(newIndex);
-    setIsZoomed(false);
-    setZoomStyle({
-      transform: 'scale(1)',
-      transformOrigin: 'center center'
-    });
+    resetZoom();
   };
 
   const goToNext = () => {
     const newIndex = currentPhotoIndex < photos.length - 1 ? currentPhotoIndex + 1 : 0;
     setCurrentPhotoIndex(newIndex);
-    setIsZoomed(false);
-    setZoomStyle({
-      transform: 'scale(1)',
-      transformOrigin: 'center center'
-    });
+    resetZoom();
   };
 
   const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
-    event.stopPropagation(); // Prevent background click
-    console.log('Image clicked, current zoom state:', isZoomed);
+    event.stopPropagation();
     
-    if (!isZoomed) {
-      // Zooming IN - calculate the click position relative to the image
+    if (zoomLevel === 1) {
+      // Zoom in to 2x at the clicked position
       const rect = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       
-      // Convert to percentages for transform-origin
       const originX = (x / rect.width) * 100;
       const originY = (y / rect.height) * 100;
       
-      console.log('Zooming IN at:', `${originX}% ${originY}%`);
-      
-      setZoomStyle({
-        transform: 'scale(2)',
-        transformOrigin: `${originX}% ${originY}%`
-      });
-      setIsZoomed(true);
+      setTransformOrigin(`${originX}% ${originY}%`);
+      setZoomLevel(2);
     } else {
-      // Zooming OUT
-      console.log('Zooming OUT');
-      setZoomStyle({
-        transform: 'scale(1)',
-        transformOrigin: 'center center'
-      });
-      setIsZoomed(false);
+      // Reset to fit view
+      resetZoom();
     }
+  };
+
+  const handleDoubleClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    event.stopPropagation();
+    
+    if (zoomLevel === 1) {
+      // Double-click to zoom in to 3x
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      const originX = (x / rect.width) * 100;
+      const originY = (y / rect.height) * 100;
+      
+      setTransformOrigin(`${originX}% ${originY}%`);
+      setZoomLevel(3);
+    } else {
+      resetZoom();
+    }
+  };
+
+  const handleWheel = (event: React.WheelEvent) => {
+    event.preventDefault();
+    
+    const delta = event.deltaY > 0 ? -0.25 : 0.25;
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel + delta));
+    
+    if (newZoom !== zoomLevel) {
+      setZoomLevel(newZoom);
+      
+      // Set transform origin to mouse position for wheel zoom
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      const originX = (x / rect.width) * 100;
+      const originY = (y / rect.height) * 100;
+      
+      setTransformOrigin(`${originX}% ${originY}%`);
+    }
+  };
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsPanning(true);
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+      event.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (isPanning && zoomLevel > 1) {
+      const deltaX = event.clientX - lastPanPoint.x;
+      const deltaY = event.clientY - lastPanPoint.y;
+      
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const zoomIn = () => {
+    const currentIndex = zoomLevels.findIndex(level => level >= zoomLevel);
+    const nextIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
+    setZoomLevel(zoomLevels[nextIndex]);
+  };
+
+  const zoomOut = () => {
+    const currentIndex = zoomLevels.findIndex(level => level >= zoomLevel);
+    const prevIndex = Math.max(currentIndex - 1, 0);
+    setZoomLevel(zoomLevels[prevIndex]);
   };
 
   useEffect(() => {
@@ -103,33 +164,45 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         goToNext();
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        zoomIn();
+      } else if (e.key === '-') {
+        e.preventDefault();
+        zoomOut();
+      } else if (e.key === '0') {
+        e.preventDefault();
+        resetZoom();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mouseup', handleMouseUp);
     document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mouseup', handleMouseUp);
       document.body.style.overflow = 'unset';
     };
-  }, [currentPhotoIndex, photos.length, onClose]);
+  }, [currentPhotoIndex, photos.length, onClose, zoomLevel]);
 
   const handleBackgroundClick = (event: React.MouseEvent) => {
-    // Only close if clicking the background, not the image container
     if (event.target === event.currentTarget) {
-      if (isZoomed) {
-        // If zoomed, zoom out first
-        setZoomStyle({
-          transform: 'scale(1)',
-          transformOrigin: 'center center'
-        });
-        setIsZoomed(false);
+      if (zoomLevel > 1) {
+        resetZoom();
       } else {
-        // If not zoomed, close modal
         onClose();
       }
     }
+  };
+
+  const getImageStyle = () => {
+    return {
+      transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
+      transformOrigin: transformOrigin,
+      cursor: zoomLevel > 1 ? (isPanning ? 'grabbing' : 'grab') : 'zoom-in'
+    };
   };
 
   return (
@@ -137,44 +210,85 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
       onClick={handleBackgroundClick}
     >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
-      >
-        <X className="h-8 w-8" />
-      </button>
+      {/* Top Controls */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
+        <div className="flex items-center space-x-2">
+          {/* Zoom Controls */}
+          <div className="flex items-center bg-black/40 rounded-lg p-1">
+            <button
+              onClick={zoomOut}
+              disabled={zoomLevel <= minZoom}
+              className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ZoomOut className="h-5 w-5" />
+            </button>
+            <span className="text-white text-sm px-2 min-w-[60px] text-center">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button
+              onClick={zoomIn}
+              disabled={zoomLevel >= maxZoom}
+              className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ZoomIn className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <button
+            onClick={resetZoom}
+            className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
+            title="Reset zoom (0)"
+          >
+            <RotateCcw className="h-5 w-5" />
+          </button>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
 
       {/* Navigation Buttons */}
       {photos.length > 1 && (
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
           >
             <ChevronLeft className="h-8 w-8" />
           </button>
           
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
           >
             <ChevronRight className="h-8 w-8" />
           </button>
         </>
       )}
 
-      <div className="max-w-4xl w-full">
-        <div className="relative overflow-hidden">
+      <div className="max-w-4xl w-full h-full flex flex-col">
+        <div 
+          className="flex-1 flex items-center justify-center overflow-hidden"
+          onWheel={handleWheel}
+          onMouseMove={handleMouseMove}
+        >
           <img
             src={currentPhoto.src}
             alt={currentPhoto.alt}
-            className="w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ease-out"
+            className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out select-none"
             onClick={handleImageClick}
-            style={zoomStyle}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            style={getImageStyle()}
+            draggable={false}
           />
         </div>
         
-        <div className="text-center mt-6 text-white">
+        <div className="text-center mt-4 text-white flex-shrink-0">
           <h3 className="text-2xl font-light mb-2">{currentPhoto.title}</h3>
           <p className="text-gray-300 font-light">{currentPhoto.description}</p>
           {photos.length > 1 && (
