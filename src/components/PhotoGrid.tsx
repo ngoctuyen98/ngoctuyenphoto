@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { AspectRatio } from './ui/aspect-ratio';
 import PhotoModal from './PhotoModal';
@@ -73,6 +72,11 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   const loadUploadedPhotos = () => {
     const savedPhotos = localStorage.getItem('uploadedPhotos');
     if (savedPhotos) {
@@ -145,11 +149,17 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
               {/* Overlay that appears on hover */}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end rounded-lg">
                 <div className="p-3 sm:p-4 lg:p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                  <h3 className="font-light text-lg sm:text-xl mb-1 sm:mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
-                    {photo.title}
+                  <h3 
+                    className="font-light text-lg sm:text-xl mb-1 sm:mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
+                    title={photo.title}
+                  >
+                    {truncateText(photo.title, 30)}
                   </h3>
-                  <p className="text-gray-200 text-xs sm:text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300">
-                    {photo.description}
+                  <p 
+                    className="text-gray-200 text-xs sm:text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"
+                    title={photo.description}
+                  >
+                    {truncateText(photo.description, 80)}
                   </p>
                 </div>
               </div>

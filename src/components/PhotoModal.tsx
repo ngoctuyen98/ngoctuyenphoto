@@ -1,5 +1,7 @@
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Edit3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ImageEditor from './ImageEditor';
 
 interface Photo {
   id: string;
@@ -23,6 +25,8 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [transformOrigin, setTransformOrigin] = useState('center center');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [currentPhoto, setCurrentPhoto] = useState(photo);
 
   const zoomLevels = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
   const maxZoom = 5;
@@ -32,10 +36,9 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   useEffect(() => {
     const index = photos.findIndex(p => p.id === photo.id);
     setCurrentPhotoIndex(index);
+    setCurrentPhoto(photos[index] || photo);
     resetZoom();
   }, [photo, photos]);
-
-  const currentPhoto = photos[currentPhotoIndex] || photo;
 
   const resetZoom = () => {
     setZoomLevel(1);
@@ -46,13 +49,20 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   const goToPrevious = () => {
     const newIndex = currentPhotoIndex > 0 ? currentPhotoIndex - 1 : photos.length - 1;
     setCurrentPhotoIndex(newIndex);
+    setCurrentPhoto(photos[newIndex]);
     resetZoom();
   };
 
   const goToNext = () => {
     const newIndex = currentPhotoIndex < photos.length - 1 ? currentPhotoIndex + 1 : 0;
     setCurrentPhotoIndex(newIndex);
+    setCurrentPhoto(photos[newIndex]);
     resetZoom();
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
@@ -177,10 +187,20 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     setZoomLevel(newZoom);
   };
 
+  const handlePhotoUpdate = (updatedPhoto: Photo) => {
+    setCurrentPhoto(updatedPhoto);
+    // Update the photos array to reflect changes
+    photos[currentPhotoIndex] = updatedPhoto;
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        if (isEditorOpen) {
+          setIsEditorOpen(false);
+        } else {
+          onClose();
+        }
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         goToPrevious();
@@ -196,6 +216,9 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       } else if (e.key === '0') {
         e.preventDefault();
         resetZoom();
+      } else if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        setIsEditorOpen(true);
       }
     };
 
@@ -208,7 +231,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       document.removeEventListener('mouseup', handleMouseUp);
       document.body.style.overflow = 'unset';
     };
-  }, [currentPhotoIndex, photos.length, onClose, zoomLevel]);
+  }, [currentPhotoIndex, photos.length, onClose, zoomLevel, isEditorOpen]);
 
   const handleBackgroundClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) {
@@ -237,99 +260,120 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-      onClick={handleBackgroundClick}
-    >
-      {/* Top Controls */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-        <div className="flex items-center space-x-2">
-          {/* Zoom Controls */}
-          <div className="flex items-center bg-black/40 rounded-lg p-1">
+    <>
+      <div 
+        className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+        onClick={handleBackgroundClick}
+      >
+        {/* Top Controls */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
+          <div className="flex items-center space-x-2">
+            {/* Zoom Controls */}
+            <div className="flex items-center bg-black/40 rounded-lg p-1">
+              <button
+                onClick={zoomOut}
+                disabled={zoomLevel <= minZoom}
+                className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ZoomOut className="h-5 w-5" />
+              </button>
+              <span className="text-white text-sm px-2 min-w-[60px] text-center">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                onClick={zoomIn}
+                disabled={zoomLevel >= maxZoom}
+                className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ZoomIn className="h-5 w-5" />
+              </button>
+            </div>
+            
             <button
-              onClick={zoomOut}
-              disabled={zoomLevel <= minZoom}
-              className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={resetZoom}
+              className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
+              title="Reset zoom (0)"
             >
-              <ZoomOut className="h-5 w-5" />
+              <RotateCcw className="h-5 w-5" />
             </button>
-            <span className="text-white text-sm px-2 min-w-[60px] text-center">
-              {Math.round(zoomLevel * 100)}%
-            </span>
+
             <button
-              onClick={zoomIn}
-              disabled={zoomLevel >= maxZoom}
-              className="text-white hover:text-gray-300 transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setIsEditorOpen(true)}
+              className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
+              title="Edit image (E)"
             >
-              <ZoomIn className="h-5 w-5" />
+              <Edit3 className="h-5 w-5" />
             </button>
           </div>
-          
+
           <button
-            onClick={resetZoom}
+            onClick={onClose}
             className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
-            title="Reset zoom (0)"
           >
-            <RotateCcw className="h-5 w-5" />
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        <button
-          onClick={onClose}
-          className="text-white hover:text-gray-300 transition-colors bg-black/40 p-2 rounded-lg"
-        >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
+        {/* Navigation Buttons */}
+        {photos.length > 1 && (
+          <>
+            <button
+              onClick={goToPrevious}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+            
+            <button
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          </>
+        )}
 
-      {/* Navigation Buttons */}
-      {photos.length > 1 && (
-        <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
+        <div className="max-w-4xl w-full h-full flex flex-col">
+          <div 
+            className="flex-1 flex items-center justify-center overflow-hidden"
+            onWheel={handleWheel}
+            onMouseMove={handleMouseMove}
           >
-            <ChevronLeft className="h-8 w-8" />
-          </button>
+            <img
+              src={currentPhoto.src}
+              alt={currentPhoto.alt}
+              className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out select-none"
+              onClick={handleImageClick}
+              onDoubleClick={handleDoubleClick}
+              onMouseDown={handleMouseDown}
+              style={getImageStyle()}
+              draggable={false}
+            />
+          </div>
           
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/40 hover:bg-black/60 p-3 rounded-full"
-          >
-            <ChevronRight className="h-8 w-8" />
-          </button>
-        </>
-      )}
-
-      <div className="max-w-4xl w-full h-full flex flex-col">
-        <div 
-          className="flex-1 flex items-center justify-center overflow-hidden"
-          onWheel={handleWheel}
-          onMouseMove={handleMouseMove}
-        >
-          <img
-            src={currentPhoto.src}
-            alt={currentPhoto.alt}
-            className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out select-none"
-            onClick={handleImageClick}
-            onDoubleClick={handleDoubleClick}
-            onMouseDown={handleMouseDown}
-            style={getImageStyle()}
-            draggable={false}
-          />
-        </div>
-        
-        <div className="text-center mt-4 text-white flex-shrink-0">
-          <h3 className="text-2xl font-light mb-2">{currentPhoto.title}</h3>
-          <p className="text-gray-300 font-light">{currentPhoto.description}</p>
-          {photos.length > 1 && (
-            <p className="text-gray-400 text-sm mt-2">
-              {currentPhotoIndex + 1} of {photos.length}
+          <div className="text-center mt-4 text-white flex-shrink-0 max-w-2xl mx-auto">
+            <h3 className="text-2xl font-light mb-2" title={currentPhoto.title}>
+              {truncateText(currentPhoto.title, 60)}
+            </h3>
+            <p className="text-gray-300 font-light text-sm sm:text-base" title={currentPhoto.description}>
+              {truncateText(currentPhoto.description, 120)}
             </p>
-          )}
+            {photos.length > 1 && (
+              <p className="text-gray-400 text-sm mt-2">
+                {currentPhotoIndex + 1} of {photos.length}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <ImageEditor
+        photo={currentPhoto}
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
+        onSave={handlePhotoUpdate}
+      />
+    </>
   );
 };
 
