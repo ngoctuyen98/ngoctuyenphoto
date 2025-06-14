@@ -46,8 +46,10 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     setTransformOrigin('center');
   };
 
-  const toggleZoom = (event?: React.MouseEvent<HTMLImageElement>) => {
-    if (!isZoomed && event) {
+  const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    console.log('Image clicked, current zoom state:', isZoomed);
+    
+    if (!isZoomed) {
       // Zooming IN - calculate the click position relative to the image
       const rect = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - rect.left;
@@ -57,10 +59,12 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       const originX = (x / rect.width) * 100;
       const originY = (y / rect.height) * 100;
       
+      console.log('Zooming IN at:', `${originX}% ${originY}%`);
       setTransformOrigin(`${originX}% ${originY}%`);
       setIsZoomed(true);
     } else {
       // Zooming OUT
+      console.log('Zooming OUT');
       setTransformOrigin('center');
       setIsZoomed(false);
     }
@@ -87,6 +91,17 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       document.body.style.overflow = 'unset';
     };
   }, [currentPhotoIndex, photos.length, onClose]);
+
+  const handleBackgroundClick = () => {
+    if (isZoomed) {
+      // If zoomed, zoom out first
+      setTransformOrigin('center');
+      setIsZoomed(false);
+    } else {
+      // If not zoomed, close modal
+      onClose();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -124,7 +139,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
             className={`w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ${
               isZoomed ? 'scale-200' : 'scale-100'
             }`}
-            onClick={toggleZoom}
+            onClick={handleImageClick}
             style={{ transformOrigin: transformOrigin }}
           />
         </div>
@@ -142,13 +157,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
 
       <div 
         className="absolute inset-0 -z-10" 
-        onClick={() => {
-          if (isZoomed) {
-            toggleZoom(); // Zoom out if clicking background while zoomed
-          } else {
-            onClose(); // Close modal if not zoomed
-          }
-        }}
+        onClick={handleBackgroundClick}
       ></div>
     </div>
   );
