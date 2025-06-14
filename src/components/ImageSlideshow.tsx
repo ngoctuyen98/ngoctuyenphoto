@@ -14,10 +14,6 @@ interface Photo {
   featured?: boolean;
 }
 
-interface ImageSlideshowProps {
-  selectedCategory: string;
-}
-
 const defaultPhotos: Photo[] = [
   {
     id: '1',
@@ -66,7 +62,7 @@ const defaultPhotos: Photo[] = [
   }
 ];
 
-const ImageSlideshow = ({ selectedCategory }: ImageSlideshowProps) => {
+const ImageSlideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slideshowPhotos, setSlideshowPhotos] = useState<Photo[]>([]);
   const { photos: dbPhotos } = usePhotos();
@@ -85,38 +81,31 @@ const ImageSlideshow = ({ selectedCategory }: ImageSlideshowProps) => {
     // Get only featured photos
     const featuredPhotos = allPhotos.filter(photo => photo.featured);
     
-    if (selectedCategory === 'all') {
-      // For 'all' category, show one random featured photo per category
-      const categories = ['portrait', 'landscape', 'wedding', 'street', 'nature'];
-      const categoryFeatured: Photo[] = [];
-      
-      categories.forEach(category => {
-        const categoryFeaturedPhotos = featuredPhotos.filter(photo => photo.category === category);
-        
-        if (categoryFeaturedPhotos.length > 0) {
-          // Get random featured photo from this category
-          const randomPhoto = getRandomPhoto(categoryFeaturedPhotos);
-          if (randomPhoto) {
-            categoryFeatured.push(randomPhoto);
-          }
-        } else {
-          // Fall back to default photo for this category
-          const defaultPhoto = defaultPhotos.find(photo => photo.category === category);
-          if (defaultPhoto) {
-            categoryFeatured.push(defaultPhoto);
-          }
-        }
-      });
-      
-      setSlideshowPhotos(categoryFeatured);
-    } else {
-      // For specific category, show all featured photos from that category
-      const categoryFeatured = featuredPhotos.filter(photo => photo.category === selectedCategory);
-      setSlideshowPhotos(categoryFeatured);
-    }
+    // Always show one random featured photo per category, regardless of selected category
+    const categories = ['portrait', 'landscape', 'wedding', 'street', 'nature'];
+    const categoryFeatured: Photo[] = [];
     
+    categories.forEach(category => {
+      const categoryFeaturedPhotos = featuredPhotos.filter(photo => photo.category === category);
+      
+      if (categoryFeaturedPhotos.length > 0) {
+        // Get random featured photo from this category
+        const randomPhoto = getRandomPhoto(categoryFeaturedPhotos);
+        if (randomPhoto) {
+          categoryFeatured.push(randomPhoto);
+        }
+      } else {
+        // Fall back to default photo for this category
+        const defaultPhoto = defaultPhotos.find(photo => photo.category === category);
+        if (defaultPhoto) {
+          categoryFeatured.push(defaultPhoto);
+        }
+      }
+    });
+    
+    setSlideshowPhotos(categoryFeatured);
     setCurrentIndex(0);
-  }, [selectedCategory, dbPhotos]);
+  }, [dbPhotos]);
 
   useEffect(() => {
     if (slideshowPhotos.length > 1) {

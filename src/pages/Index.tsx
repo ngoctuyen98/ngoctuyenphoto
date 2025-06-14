@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -53,7 +52,7 @@ const Index = () => {
             onCategoryChange={setSelectedCategory}
           />
           <div className="mb-20">
-            <ImageSlideshow selectedCategory={selectedCategory} />
+            <ImageSlideshow />
           </div>
           
           {loading ? (
