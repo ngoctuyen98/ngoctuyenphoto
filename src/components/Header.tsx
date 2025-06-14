@@ -48,6 +48,9 @@ const Header = () => {
             <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
               isScrolled ? 'text-gray-800' : 'text-white'
             }`}>Work</a>
+            <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+              isScrolled ? 'text-gray-800' : 'text-white'
+            }`}>Portfolio</a>
             <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
               isScrolled ? 'text-gray-800' : 'text-white'
             }`}>About</a>
@@ -87,6 +90,9 @@ const Header = () => {
               <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
                 isScrolled ? 'text-gray-800' : 'text-white'
               }`}>Work</a>
+              <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                isScrolled ? 'text-gray-800' : 'text-white'
+              }`}>Portfolio</a>
               <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
                 isScrolled ? 'text-gray-800' : 'text-white'
               }`}>About</a>
