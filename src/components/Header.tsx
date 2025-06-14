@@ -1,5 +1,5 @@
 
-import { Camera, Menu, X, User } from 'lucide-react';
+import { Camera, Menu, X, User, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -58,19 +58,24 @@ const Header = () => {
               isScrolled ? 'text-gray-800' : 'text-white'
             }`}>Contact</a>
             
-            {isAuthenticated ? (
-              <a href="/dashboard" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>
-                <User className="h-4 w-4" />
-                <span>Dashboard</span>
-              </a>
-            ) : (
-              <a href="/auth" className={`text-sm tracking-[0.1em] uppercase font-light border px-6 py-2 transition-all duration-300 hover:opacity-70 ${
-                isScrolled ? 'text-gray-800 border-gray-300' : 'text-white border-white/30'
-              }`}>
-                Login
-              </a>
+            {isAuthenticated && (
+              <>
+                {location.pathname === '/dashboard' ? (
+                  <a href="/" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>
+                    <Home className="h-4 w-4" />
+                    <span>Home</span>
+                  </a>
+                ) : (
+                  <a href="/dashboard" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>
+                    <User className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </a>
+                )}
+              </>
             )}
           </nav>
 
@@ -100,14 +105,18 @@ const Header = () => {
                 isScrolled ? 'text-gray-800' : 'text-white'
               }`}>Contact</a>
               
-              {isAuthenticated ? (
-                <a href="/dashboard" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                  isScrolled ? 'text-gray-800' : 'text-white'
-                }`}>Dashboard</a>
-              ) : (
-                <a href="/auth" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                  isScrolled ? 'text-gray-800' : 'text-white'
-                }`}>Login</a>
+              {isAuthenticated && (
+                <>
+                  {location.pathname === '/dashboard' ? (
+                    <a href="/" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                      isScrolled ? 'text-gray-800' : 'text-white'
+                    }`}>Home</a>
+                  ) : (
+                    <a href="/dashboard" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                      isScrolled ? 'text-gray-800' : 'text-white'
+                    }`}>Dashboard</a>
+                  )}
+                </>
               )}
             </nav>
           </div>
