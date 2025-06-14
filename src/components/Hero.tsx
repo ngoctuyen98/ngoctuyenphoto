@@ -12,7 +12,7 @@ const Hero = () => {
       
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
         <h1 className="text-6xl md:text-8xl font-extralight mb-8 tracking-[0.02em] leading-[0.9]">
-          MATSUYA
+          NGOC TUYEN
         </h1>
         <div className="w-24 h-px bg-white/60 mx-auto mb-8"></div>
         <p className="text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed opacity-90 tracking-wide">

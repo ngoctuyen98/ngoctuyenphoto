@@ -40,7 +40,7 @@ const Header = () => {
             <div className={`text-2xl font-extralight tracking-[0.2em] transition-colors ${
               isScrolled ? 'text-black' : 'text-white'
             }`}>
-              MATSUYA
+              NGOC TUYEN
             </div>
           </a>
           
