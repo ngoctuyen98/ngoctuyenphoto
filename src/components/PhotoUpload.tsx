@@ -30,10 +30,30 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
 
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
+      console.log('Converting file to base64:', file.name, file.size);
+      
+      // Check file size (limit to 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        reject(new Error('File size too large. Maximum 10MB allowed.'));
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        reject(new Error('Invalid file type. Please select an image file.'));
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
+      reader.onload = () => {
+        console.log('File converted successfully');
+        resolve(reader.result as string);
+      };
+      reader.onerror = error => {
+        console.error('FileReader error:', error);
+        reject(new Error('Failed to read file'));
+      };
     });
   };
 
@@ -67,6 +87,13 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('Starting upload process...');
+    console.log('Selected files:', selectedFiles.length);
+    console.log('Title:', title);
+    console.log('Description:', description);
+    console.log('Category:', category);
+
     if (selectedFiles.length === 0) {
       toast({
         title: "No files selected",
@@ -76,13 +103,34 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       return;
     }
 
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter a title for your photos.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      console.log('Converting files to base64...');
+      
       // Convert all files to base64
       const base64Images = await Promise.all(
-        selectedFiles.map(file => convertFileToBase64(file))
+        selectedFiles.map(async (file, index) => {
+          try {
+            console.log(`Converting file ${index + 1}/${selectedFiles.length}:`, file.name);
+            return await convertFileToBase64(file);
+          } catch (error) {
+            console.error(`Error converting file ${file.name}:`, error);
+            throw error;
+          }
+        })
       );
+
+      console.log('All files converted successfully');
 
       // Create photo objects with base64 data
       const uploadedPhotos = selectedFiles.map((file, index) => ({
@@ -90,12 +138,23 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
         title: selectedFiles.length === 1 ? title : `${title} ${index + 1}`,
         description,
         category,
-        url: base64Images[index], // Use base64 instead of blob URL
+        url: base64Images[index],
         fileName: file.name,
         uploadedAt: new Date().toISOString()
       }));
 
-      console.log('Upload attempt:', uploadedPhotos);
+      console.log('Created photo objects:', uploadedPhotos.length);
+
+      // Get existing photos from localStorage
+      const existingPhotos = localStorage.getItem('uploadedPhotos');
+      const allPhotos = existingPhotos ? JSON.parse(existingPhotos) : [];
+      
+      // Add new photos
+      const updatedPhotos = [...allPhotos, ...uploadedPhotos];
+      
+      // Save to localStorage
+      localStorage.setItem('uploadedPhotos', JSON.stringify(updatedPhotos));
+      console.log('Photos saved to localStorage');
 
       toast({
         title: "Photos uploaded successfully",
@@ -106,15 +165,26 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       setTitle('');
       setDescription('');
       setCategory('portrait');
+      
+      // Clean up preview URLs
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
       setSelectedFiles([]);
       setPreviewUrls([]);
       
+      console.log('Calling onUploadSuccess...');
       onUploadSuccess(uploadedPhotos);
+      
+      // Dispatch event to update other components
+      window.dispatchEvent(new CustomEvent('photosUpdated'));
+      console.log('Upload process completed successfully');
+
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your photos.",
+        description: `There was an error uploading your photos: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
