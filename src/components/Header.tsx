@@ -1,4 +1,5 @@
-import { Camera, Menu, X, User, Home, LogIn } from 'lucide-react';
+
+import { Camera, Menu, X, User, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -74,15 +75,6 @@ const Header = () => {
                 <span>Dashboard</span>
               </a>
             )}
-
-            {!isAuthenticated && (
-              <a href="/auth" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>
-                <LogIn className="h-4 w-4" />
-                <span>Login</span>
-              </a>
-            )}
           </nav>
 
           <button 
@@ -122,12 +114,6 @@ const Header = () => {
               {isAuthenticated && location.pathname !== '/dashboard' && (
                 <a href="/dashboard" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
                   Dashboard
-                </a>
-              )}
-
-              {!isAuthenticated && (
-                <a href="/auth" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
-                  Login
                 </a>
               )}
             </nav>
