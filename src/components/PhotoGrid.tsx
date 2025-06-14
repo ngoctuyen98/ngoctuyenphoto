@@ -121,29 +121,30 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredPhotos.map((photo) => (
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+        {filteredPhotos.map((photo, index) => (
           <div 
             key={photo.id}
-            className="group cursor-pointer"
+            className="group cursor-pointer break-inside-avoid mb-8"
             onClick={() => setSelectedPhoto(photo)}
           >
-            <div className="aspect-square overflow-hidden bg-gray-100 relative">
+            <div className="relative overflow-hidden bg-gray-100">
               <img
                 src={photo.src}
                 alt={photo.alt}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 group-hover:opacity-90"
                 loading="lazy"
               />
               {photo.featured && (
-                <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded">
+                <div className="absolute top-4 left-4 bg-white/90 text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light">
                   Featured
                 </div>
               )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
             </div>
-            <div className="mt-4">
-              <h3 className="font-light text-lg text-gray-900">{photo.title}</h3>
-              <p className="text-gray-600 text-sm font-light">{photo.description}</p>
+            <div className="mt-6 px-2">
+              <h3 className="font-light text-lg text-gray-900 mb-2 tracking-wide">{photo.title}</h3>
+              <p className="text-gray-500 text-sm font-light leading-relaxed">{photo.description}</p>
             </div>
           </div>
         ))}
