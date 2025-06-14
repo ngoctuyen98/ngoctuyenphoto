@@ -51,10 +51,10 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
   }, [isOpen, photo]);
 
   useEffect(() => {
-    if (isOpen && canvasRef.current && !imageLoaded) {
+    if (isOpen && canvasRef.current) {
       loadImageToCanvas();
     }
-  }, [isOpen]);
+  }, [isOpen, photo.src]);
 
   useEffect(() => {
     if (imageLoaded && canvasRef.current) {
@@ -72,8 +72,12 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
     // Create new image element
     const img = new Image();
     imageRef.current = img;
+    
+    // Set crossOrigin before setting src for external images
+    img.crossOrigin = 'anonymous';
 
     img.onload = () => {
+      console.log('Image loaded successfully');
       // Set canvas dimensions
       canvas.width = Math.min(img.width, 600);
       canvas.height = (canvas.width / img.width) * img.height;
@@ -85,16 +89,25 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
       setImageLoaded(true);
     };
 
-    img.onerror = () => {
-      console.error('Failed to load image:', photo.src);
+    img.onerror = (error) => {
+      console.error('Failed to load image:', photo.src, error);
+      
+      // Try loading without crossOrigin for local/blob URLs
+      if (img.crossOrigin) {
+        img.crossOrigin = '';
+        img.src = photo.src;
+        return;
+      }
+      
       toast({
         title: "Image load failed",
         description: "Could not load the image for editing.",
         variant: "destructive"
       });
+      setImageLoaded(false);
     };
 
-    // Set image source - handle both blob URLs and regular URLs
+    // Set image source
     img.src = photo.src;
   };
 
