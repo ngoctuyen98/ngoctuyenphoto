@@ -6,18 +6,11 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import PhotoGrid from '@/components/PhotoGrid';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePhotos } from '@/hooks/usePhotos';
 
 const Index = () => {
-  const [photos] = useState([]);
   const { user } = useAuth();
-
-  useEffect(() => {
-    // Migrate existing localStorage photos to show migration notice
-    const savedPhotos = localStorage.getItem('uploadedPhotos');
-    if (savedPhotos) {
-      console.log('Found photos in localStorage - these will need to be re-uploaded to the database');
-    }
-  }, []);
+  const { photos, loading, error } = usePhotos();
 
   return (
     <div className="min-h-screen bg-white">
@@ -55,14 +48,26 @@ const Index = () => {
           )}
         </div>
 
-        <PhotoGrid photos={photos} />
-        
-        {photos.length === 0 && (
+        {loading ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 font-light">
-              No photos to display yet. Sign up to start sharing your work!
-            </p>
+            <p className="text-gray-500 font-light">Loading photos...</p>
           </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <p className="text-red-500 font-light">{error}</p>
+          </div>
+        ) : (
+          <>
+            <PhotoGrid photos={photos} />
+            
+            {photos.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-gray-500 font-light">
+                  No photos to display yet. Sign up to start sharing your work!
+                </p>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from 'react';
-import { AspectRatio } from './ui/aspect-ratio';
+import { useState } from 'react';
 import PhotoModal from './PhotoModal';
 
 interface Photo {
@@ -72,51 +71,14 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
 
-  const loadUploadedPhotos = () => {
-    const savedPhotos = localStorage.getItem('uploadedPhotos');
-    if (savedPhotos) {
-      const parsedPhotos = JSON.parse(savedPhotos);
-      // Convert uploaded photos to the Photo interface format and filter out hidden ones
-      const convertedPhotos: Photo[] = parsedPhotos
-        .filter((photo: any) => !photo.hidden) // Only show non-hidden photos
-        .map((photo: any) => ({
-          id: photo.id.toString(),
-          src: photo.url,
-          alt: photo.title,
-          category: photo.category,
-          title: photo.title,
-          description: photo.description,
-          featured: photo.featured
-        }));
-      setUploadedPhotos(convertedPhotos);
-    }
-  };
-
-  useEffect(() => {
-    // Load uploaded photos from localStorage on initial render
-    loadUploadedPhotos();
-
-    // Listen for photo updates
-    const handlePhotosUpdated = () => {
-      loadUploadedPhotos();
-    };
-
-    window.addEventListener('photosUpdated', handlePhotosUpdated);
-    
-    return () => {
-      window.removeEventListener('photosUpdated', handlePhotosUpdated);
-    };
-  }, []);
-
-  // Use passed photos or combine uploaded photos with default photos, sort by featured status
-  const allPhotos = photos.length > 0 ? photos : [...uploadedPhotos, ...defaultPhotos].sort((a, b) => {
+  // Use passed photos or fall back to default photos, sort by featured status
+  const allPhotos = photos.length > 0 ? photos : defaultPhotos.sort((a, b) => {
     if (a.featured && !b.featured) return -1;
     if (!a.featured && b.featured) return 1;
     return 0;
