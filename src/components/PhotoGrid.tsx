@@ -90,37 +90,51 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
 
   return (
     <>
-      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 sm:gap-6 lg:gap-8 space-y-4 sm:space-y-6 lg:space-y-8">
+      <div 
+        className="masonry-grid"
+        style={{
+          columnCount: 'auto',
+          columnWidth: '300px',
+          columnGap: '20px',
+          columnFill: 'balance'
+        }}
+      >
         {filteredPhotos.map((photo) => (
           <div 
             key={photo.id}
-            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-4 sm:mb-6 lg:mb-8"
+            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-5 bg-white rounded-lg shadow-sm border border-gray-100"
             onClick={() => setSelectedPhoto(photo)}
+            style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}
           >
-            <div className="relative overflow-hidden bg-gray-100 rounded-lg">
+            <div className="relative overflow-hidden">
               <img
                 src={photo.src}
                 alt={photo.alt}
-                className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105"
+                className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 rounded-lg"
                 loading="lazy"
+                style={{ 
+                  display: 'block',
+                  width: '100%',
+                  height: 'auto'
+                }}
               />
               {photo.featured && (
-                <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-white/90 text-black px-2 sm:px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded">
+                <div className="absolute top-3 left-3 bg-white/90 text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-sm">
                   Featured
                 </div>
               )}
               
               {/* Overlay that appears on hover */}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end rounded-lg">
-                <div className="p-3 sm:p-4 lg:p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                <div className="p-4 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
                   <h3 
-                    className="font-light text-lg sm:text-xl mb-1 sm:mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
+                    className="font-light text-lg mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
                     title={photo.title}
                   >
                     {truncateText(photo.title, 30)}
                   </h3>
                   <p 
-                    className="text-gray-200 text-xs sm:text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"
+                    className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"
                     title={photo.description}
                   >
                     {truncateText(photo.description, 80)}
