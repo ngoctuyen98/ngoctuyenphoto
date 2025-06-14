@@ -2,24 +2,13 @@
 import { Camera, Menu, X, User, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const authState = localStorage.getItem('isAuthenticated');
-      setIsAuthenticated(authState === 'true');
-    };
-    
-    checkAuth();
-    window.addEventListener('storage', checkAuth);
-    
-    return () => window.removeEventListener('storage', checkAuth);
-  }, []);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,7 +56,7 @@ const Header = () => {
               </>
             )}
             
-            {isAuthenticated && location.pathname !== '/dashboard' && (
+            {user && location.pathname !== '/dashboard' && (
               <a href="/dashboard" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
                 isScrolled ? 'text-gray-800' : 'text-white'
               }`}>
@@ -111,7 +100,7 @@ const Header = () => {
                 </>
               )}
               
-              {isAuthenticated && location.pathname !== '/dashboard' && (
+              {user && location.pathname !== '/dashboard' && (
                 <a href="/dashboard" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
                   Dashboard
                 </a>
