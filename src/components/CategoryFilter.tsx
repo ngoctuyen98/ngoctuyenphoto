@@ -6,11 +6,17 @@ interface CategoryFilterProps {
 
 const categories = [
   { id: 'all', name: 'All' },
-  { id: 'portrait', name: 'Portrait' },
-  { id: 'landscape', name: 'Landscape' },
-  { id: 'wedding', name: 'Wedding' },
-  { id: 'street', name: 'Street' },
-  { id: 'nature', name: 'Nature' }
+  { id: 'Portrait', name: 'Portrait' },
+  { id: 'Landscape', name: 'Landscape' },
+  { id: 'Nature', name: 'Nature' },
+  { id: 'Architecture', name: 'Architecture' },
+  { id: 'Street', name: 'Street' },
+  { id: 'Wildlife', name: 'Wildlife' },
+  { id: 'Abstract', name: 'Abstract' },
+  { id: 'Travel', name: 'Travel' },
+  { id: 'Macro', name: 'Macro' },
+  { id: 'Black & White', name: 'Black & White' },
+  { id: 'Other', name: 'Other' }
 ];
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterProps) => {
