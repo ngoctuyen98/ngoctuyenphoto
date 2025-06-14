@@ -65,10 +65,11 @@ const defaultPhotos: Photo[] = [
 ];
 
 interface PhotoGridProps {
+  photos?: Photo[];
   selectedCategory?: string;
 }
 
-const PhotoGrid = ({ selectedCategory = 'all' }: PhotoGridProps) => {
+const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   const truncateText = (text: string, maxLength: number) => {
@@ -76,9 +77,16 @@ const PhotoGrid = ({ selectedCategory = 'all' }: PhotoGridProps) => {
     return text.substring(0, maxLength) + '...';
   };
 
+  // Use passed photos or fall back to default photos, sort by featured status
+  const allPhotos = photos.length > 0 ? photos.sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  }) : defaultPhotos;
+
   const filteredPhotos = selectedCategory === 'all' 
-    ? defaultPhotos 
-    : defaultPhotos.filter(photo => photo.category === selectedCategory);
+    ? allPhotos 
+    : allPhotos.filter(photo => photo.category === selectedCategory);
 
   return (
     <>
