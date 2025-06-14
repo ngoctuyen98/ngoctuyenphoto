@@ -31,23 +31,34 @@ export const usePhotos = () => {
       setLoading(true);
       console.log('Fetching photos... User authenticated:', !!user);
       
-      // Fetch photos regardless of authentication status
-      // Only show non-hidden photos to maintain privacy
+      // First, let's check ALL photos in the database for debugging
+      const { data: allPhotos, error: allPhotosError } = await supabase
+        .from('photos')
+        .select('*');
+      
+      console.log('ALL photos in database:', { data: allPhotos, error: allPhotosError });
+      console.log('Total photos in database:', allPhotos ? allPhotos.length : 0);
+      
+      if (allPhotos && allPhotos.length > 0) {
+        console.log('Sample photo data:', allPhotos[0]);
+        console.log('Hidden status of photos:', allPhotos.map(p => ({ id: p.id, title: p.title, hidden: p.hidden })));
+      }
+      
+      // Now fetch non-hidden photos
       const { data, error } = await supabase
         .from('photos')
         .select('*')
-        .eq('hidden', false) // Only show non-hidden photos
+        .eq('hidden', false)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
-      console.log('Supabase query result:', { data, error });
-      console.log('Number of photos found:', data ? data.length : 0);
+      console.log('Non-hidden photos query result:', { data, error });
+      console.log('Number of non-hidden photos found:', data ? data.length : 0);
 
       if (error) {
         console.error('Error fetching photos:', error);
-        // Don't throw error for unauthenticated users, just show empty array
         setPhotos([]);
-        setError(null);
+        setError(error.message);
       } else {
         console.log('Setting photos:', data || []);
         setPhotos(data || []);
@@ -55,7 +66,6 @@ export const usePhotos = () => {
       }
     } catch (err) {
       console.error('Error fetching photos:', err);
-      // For unauthenticated users, don't show error, just empty array
       setPhotos([]);
       setError(null);
     } finally {
@@ -67,7 +77,7 @@ export const usePhotos = () => {
   useEffect(() => {
     console.log('usePhotos hook mounted, starting fetch...');
     fetchPhotos();
-  }, []); // Remove user dependency to fetch photos regardless of auth status
+  }, []);
 
   const mappedPhotos = photos.map(photo => ({
     id: photo.id,
