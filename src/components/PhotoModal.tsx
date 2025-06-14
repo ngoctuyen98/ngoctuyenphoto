@@ -20,14 +20,23 @@ interface PhotoModalProps {
 const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [transformOrigin, setTransformOrigin] = useState<string>('center');
+  const [zoomStyle, setZoomStyle] = useState<{
+    transform: string;
+    transformOrigin: string;
+  }>({
+    transform: 'scale(1)',
+    transformOrigin: 'center center'
+  });
 
   // Find the current photo index when the modal opens or photo changes
   useEffect(() => {
     const index = photos.findIndex(p => p.id === photo.id);
     setCurrentPhotoIndex(index);
-    setIsZoomed(false); // Reset zoom state when photo changes
-    setTransformOrigin('center'); // Reset transform origin
+    setIsZoomed(false);
+    setZoomStyle({
+      transform: 'scale(1)',
+      transformOrigin: 'center center'
+    });
   }, [photo, photos]);
 
   const currentPhoto = photos[currentPhotoIndex] || photo;
@@ -36,17 +45,24 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     const newIndex = currentPhotoIndex > 0 ? currentPhotoIndex - 1 : photos.length - 1;
     setCurrentPhotoIndex(newIndex);
     setIsZoomed(false);
-    setTransformOrigin('center');
+    setZoomStyle({
+      transform: 'scale(1)',
+      transformOrigin: 'center center'
+    });
   };
 
   const goToNext = () => {
     const newIndex = currentPhotoIndex < photos.length - 1 ? currentPhotoIndex + 1 : 0;
     setCurrentPhotoIndex(newIndex);
     setIsZoomed(false);
-    setTransformOrigin('center');
+    setZoomStyle({
+      transform: 'scale(1)',
+      transformOrigin: 'center center'
+    });
   };
 
   const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    event.stopPropagation(); // Prevent background click
     console.log('Image clicked, current zoom state:', isZoomed);
     
     if (!isZoomed) {
@@ -60,12 +76,19 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       const originY = (y / rect.height) * 100;
       
       console.log('Zooming IN at:', `${originX}% ${originY}%`);
-      setTransformOrigin(`${originX}% ${originY}%`);
+      
+      setZoomStyle({
+        transform: 'scale(2)',
+        transformOrigin: `${originX}% ${originY}%`
+      });
       setIsZoomed(true);
     } else {
       // Zooming OUT
       console.log('Zooming OUT');
-      setTransformOrigin('center');
+      setZoomStyle({
+        transform: 'scale(1)',
+        transformOrigin: 'center center'
+      });
       setIsZoomed(false);
     }
   };
@@ -92,19 +115,28 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     };
   }, [currentPhotoIndex, photos.length, onClose]);
 
-  const handleBackgroundClick = () => {
-    if (isZoomed) {
-      // If zoomed, zoom out first
-      setTransformOrigin('center');
-      setIsZoomed(false);
-    } else {
-      // If not zoomed, close modal
-      onClose();
+  const handleBackgroundClick = (event: React.MouseEvent) => {
+    // Only close if clicking the background, not the image container
+    if (event.target === event.currentTarget) {
+      if (isZoomed) {
+        // If zoomed, zoom out first
+        setZoomStyle({
+          transform: 'scale(1)',
+          transformOrigin: 'center center'
+        });
+        setIsZoomed(false);
+      } else {
+        // If not zoomed, close modal
+        onClose();
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+      onClick={handleBackgroundClick}
+    >
       <button
         onClick={onClose}
         className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
@@ -136,11 +168,9 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
           <img
             src={currentPhoto.src}
             alt={currentPhoto.alt}
-            className={`w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ${
-              isZoomed ? 'scale-200' : 'scale-100'
-            }`}
+            className="w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ease-out"
             onClick={handleImageClick}
-            style={{ transformOrigin: transformOrigin }}
+            style={zoomStyle}
           />
         </div>
         
@@ -154,11 +184,6 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
           )}
         </div>
       </div>
-
-      <div 
-        className="absolute inset-0 -z-10" 
-        onClick={handleBackgroundClick}
-      ></div>
     </div>
   );
 };
