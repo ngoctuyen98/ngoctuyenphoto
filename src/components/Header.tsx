@@ -99,39 +99,39 @@ const Header = () => {
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden py-6 border-t border-gray-100/20">
-            <nav className="flex flex-col space-y-6">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/10">
+            <nav className="flex flex-col space-y-6 p-8">
               {location.pathname === '/dashboard' ? (
-                <a href="/" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                  isScrolled ? 'text-gray-800' : 'text-white'
-                }`}>Home</a>
+                <a href="/" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                  Home
+                </a>
               ) : (
                 <>
-                  <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>Work</a>
-                  <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>Portfolio</a>
-                  <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>About</a>
-                  <a href="/#contact" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>Contact</a>
+                  <a href="/#home" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                    Work
+                  </a>
+                  <a href="/#portfolio" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                    Portfolio
+                  </a>
+                  <a href="/#about" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                    About
+                  </a>
+                  <a href="/#contact" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                    Contact
+                  </a>
                 </>
               )}
               
               {isAuthenticated && location.pathname !== '/dashboard' && (
-                <a href="/dashboard" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                  isScrolled ? 'text-gray-800' : 'text-white'
-                }`}>Dashboard</a>
+                <a href="/dashboard" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                  Dashboard
+                </a>
               )}
 
               {!isAuthenticated && (
-                <a href="/auth" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                  isScrolled ? 'text-gray-800' : 'text-white'
-                }`}>Login</a>
+                <a href="/auth" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
+                  Login
+                </a>
               )}
             </nav>
           </div>
