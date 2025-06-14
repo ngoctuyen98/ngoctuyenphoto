@@ -1,6 +1,6 @@
 
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Photo {
   id: string;
@@ -13,25 +13,59 @@ interface Photo {
 
 interface PhotoModalProps {
   photo: Photo;
+  photos: Photo[];
   onClose: () => void;
 }
 
-const PhotoModal = ({ photo, onClose }: PhotoModalProps) => {
+const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Find the current photo index when the modal opens or photo changes
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+    const index = photos.findIndex(p => p.id === photo.id);
+    setCurrentPhotoIndex(index);
+  }, [photo, photos]);
+
+  const currentPhoto = photos[currentPhotoIndex] || photo;
+
+  const goToPrevious = () => {
+    const newIndex = currentPhotoIndex > 0 ? currentPhotoIndex - 1 : photos.length - 1;
+    setCurrentPhotoIndex(newIndex);
+    setIsZoomed(false);
+  };
+
+  const goToNext = () => {
+    const newIndex = currentPhotoIndex < photos.length - 1 ? currentPhotoIndex + 1 : 0;
+    setCurrentPhotoIndex(newIndex);
+    setIsZoomed(false);
+  };
+
+  const toggleZoom = () => {
+    setIsZoomed(!isZoomed);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNext();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [onClose]);
+  }, [currentPhotoIndex, photos.length]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -42,18 +76,45 @@ const PhotoModal = ({ photo, onClose }: PhotoModalProps) => {
         <X className="h-8 w-8" />
       </button>
 
+      {/* Navigation Buttons */}
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={goToPrevious}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full"
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full"
+          >
+            <ChevronRight className="h-8 w-8" />
+          </button>
+        </>
+      )}
+
       <div className="max-w-4xl w-full">
-        <div className="relative">
+        <div className="relative overflow-hidden">
           <img
-            src={photo.src}
-            alt={photo.alt}
-            className="w-full h-auto max-h-[80vh] object-contain"
+            src={currentPhoto.src}
+            alt={currentPhoto.alt}
+            className={`w-full h-auto max-h-[80vh] object-contain cursor-pointer transition-transform duration-300 ${
+              isZoomed ? 'scale-150' : 'scale-100'
+            }`}
+            onClick={toggleZoom}
           />
         </div>
         
         <div className="text-center mt-6 text-white">
-          <h3 className="text-2xl font-light mb-2">{photo.title}</h3>
-          <p className="text-gray-300 font-light">{photo.description}</p>
+          <h3 className="text-2xl font-light mb-2">{currentPhoto.title}</h3>
+          <p className="text-gray-300 font-light">{currentPhoto.description}</p>
+          {photos.length > 1 && (
+            <p className="text-gray-400 text-sm mt-2">
+              {currentPhotoIndex + 1} of {photos.length}
+            </p>
+          )}
         </div>
       </div>
 

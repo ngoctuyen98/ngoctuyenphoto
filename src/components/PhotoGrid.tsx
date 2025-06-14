@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import PhotoModal from './PhotoModal';
 
@@ -150,7 +151,8 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
 
       {selectedPhoto && (
         <PhotoModal 
-          photo={selectedPhoto} 
+          photo={selectedPhoto}
+          photos={filteredPhotos}
           onClose={() => setSelectedPhoto(null)} 
         />
       )}
