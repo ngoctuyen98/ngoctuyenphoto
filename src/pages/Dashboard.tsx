@@ -3,57 +3,88 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Plus } from 'lucide-react';
 import PhotoUpload from '@/components/PhotoUpload';
-import PhotoManager from '@/components/PhotoManager';
 import Header from '@/components/Header';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Photo {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  file_path: string;
+  file_name: string;
+  featured: boolean;
+  hidden: boolean;
+  created_at: string;
+}
 
 const Dashboard = () => {
   const [showUpload, setShowUpload] = useState(false);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const userEmail = localStorage.getItem('userEmail') || 'photographer@example.com';
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
-  const loadPhotos = () => {
-    const savedPhotos = localStorage.getItem('uploadedPhotos');
-    if (savedPhotos) {
-      const parsedPhotos = JSON.parse(savedPhotos);
-      // Sort photos: featured first, then by upload date (newest first)
-      const sortedPhotos = parsedPhotos.sort((a: any, b: any) => {
-        if (a.featured && !b.featured) return -1;
-        if (!a.featured && b.featured) return 1;
-        return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+  const getPhotoUrl = (filePath: string) => {
+    const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const loadPhotos = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setPhotos(data || []);
+    } catch (error) {
+      console.error('Error loading photos:', error);
+      toast({
+        title: "Error loading photos",
+        description: "There was an error loading your photos.",
+        variant: "destructive"
       });
-      setPhotos(sortedPhotos);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Check if user is authenticated
-    const isAuth = localStorage.getItem('isAuthenticated');
-    if (isAuth !== 'true') {
+    if (!user) {
       navigate('/auth');
       return;
     }
 
     loadPhotos();
-  }, [navigate]);
+  }, [user, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    window.dispatchEvent(new Event('storage'));
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
-  const handleUploadSuccess = (newPhotos: any[]) => {
-    const allPhotos = [...photos, ...newPhotos];
-    setPhotos(allPhotos);
-    localStorage.setItem('uploadedPhotos', JSON.stringify(allPhotos));
+  const handleUploadSuccess = () => {
+    loadPhotos();
     setShowUpload(false);
-    
-    // Dispatch a custom event to notify other components about the photo update
-    window.dispatchEvent(new CustomEvent('photosUpdated'));
   };
+
+  if (!user) {
+    return null; // Will redirect to auth
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -63,7 +94,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-thin text-gray-900 mb-2">Dashboard</h1>
-            <p className="text-gray-600 font-light">Welcome back, {userEmail}</p>
+            <p className="text-gray-600 font-light">Welcome back, {user.email}</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -99,15 +130,19 @@ const Dashboard = () => {
           </div>
         ) : (
           <div>
-            {photos.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-16">
+                <p className="text-gray-600 font-light">Loading your photos...</p>
+              </div>
+            ) : photos.length > 0 ? (
               <div>
                 <h2 className="text-2xl font-thin text-gray-900 mb-6">Your Photos ({photos.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {photos.map((photo, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                       <div className="aspect-square overflow-hidden relative">
                         <img
-                          src={photo.url}
+                          src={getPhotoUrl(photo.file_path)}
                           alt={photo.title}
                           className="w-full h-full object-cover"
                         />
@@ -129,12 +164,6 @@ const Dashboard = () => {
                           <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                             {photo.category}
                           </span>
-                        </div>
-                        <div className="mt-3">
-                          <PhotoManager 
-                            photo={photo} 
-                            onPhotoUpdate={loadPhotos}
-                          />
                         </div>
                       </div>
                     </div>
