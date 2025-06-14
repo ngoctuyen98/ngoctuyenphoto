@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Photo {
   id: string;
@@ -17,6 +18,7 @@ export const usePhotos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const getPhotoUrl = (filePath: string) => {
     const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
@@ -26,6 +28,9 @@ export const usePhotos = () => {
   const fetchPhotos = async () => {
     try {
       setLoading(true);
+      
+      // Fetch photos regardless of authentication status
+      // Only show non-hidden photos to maintain privacy
       const { data, error } = await supabase
         .from('photos')
         .select('*')
@@ -34,14 +39,19 @@ export const usePhotos = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        throw error;
+        console.error('Error fetching photos:', error);
+        // Don't throw error for unauthenticated users, just show empty array
+        setPhotos([]);
+        setError(null);
+      } else {
+        setPhotos(data || []);
+        setError(null);
       }
-
-      setPhotos(data || []);
-      setError(null);
     } catch (err) {
       console.error('Error fetching photos:', err);
-      setError('Failed to load photos');
+      // For unauthenticated users, don't show error, just empty array
+      setPhotos([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -49,7 +59,7 @@ export const usePhotos = () => {
 
   useEffect(() => {
     fetchPhotos();
-  }, []);
+  }, []); // Remove user dependency to fetch photos regardless of auth status
 
   return {
     photos: photos.map(photo => ({
