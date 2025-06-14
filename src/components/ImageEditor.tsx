@@ -28,6 +28,7 @@ interface ImageEditorProps {
 const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
   const [title, setTitle] = useState(photo.title);
   const [description, setDescription] = useState(photo.description);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   // Reset state when photo changes or modal opens
@@ -38,7 +39,17 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
     }
   }, [isOpen, photo]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter a title for the photo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSaving(true);
     try {
       const updatedPhoto: Photo = {
         ...photo,
@@ -46,36 +57,33 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
         description: description.trim()
       };
 
-      // Update localStorage if this is an uploaded photo
-      const savedPhotos = localStorage.getItem('uploadedPhotos');
-      if (savedPhotos) {
-        const photos = JSON.parse(savedPhotos);
-        const updatedPhotos = photos.map((p: any) => 
-          p.id === photo.id ? { ...p, title: title.trim(), description: description.trim() } : p
-        );
-        localStorage.setItem('uploadedPhotos', JSON.stringify(updatedPhotos));
-        window.dispatchEvent(new CustomEvent('photosUpdated'));
-      }
-
       onSave(updatedPhoto);
-      onClose();
       
       toast({
         title: "Photo updated",
         description: "Photo title and description have been successfully updated."
       });
     } catch (error) {
+      console.error('Error saving photo:', error);
       toast({
         title: "Save failed",
         description: "There was an error saving your changes.",
         variant: "destructive"
       });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSave();
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" onKeyDown={handleKeyDown}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Edit3 className="h-5 w-5" />
@@ -98,14 +106,18 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
           {/* Text Editing */}
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Title</label>
+              <label className="text-sm font-medium mb-2 block">Title *</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter image title"
                 maxLength={100}
+                className="focus:ring-2 focus:ring-gray-500"
               />
-              <span className="text-xs text-gray-500">{title.length}/100</span>
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-gray-500">{title.length}/100</span>
+                {!title.trim() && <span className="text-xs text-red-500">Title is required</span>}
+              </div>
             </div>
 
             <div>
@@ -116,6 +128,7 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
                 placeholder="Enter image description"
                 rows={4}
                 maxLength={500}
+                className="focus:ring-2 focus:ring-gray-500"
               />
               <span className="text-xs text-gray-500">{description.length}/500</span>
             </div>
@@ -123,15 +136,23 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
 
           {/* Action Buttons */}
           <div className="flex space-x-2 pt-4">
-            <Button onClick={handleSave} className="flex-1">
+            <Button 
+              onClick={handleSave} 
+              className="flex-1"
+              disabled={saving || !title.trim()}
+            >
               <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
-            <Button onClick={onClose} variant="outline" className="flex-1">
+            <Button onClick={onClose} variant="outline" className="flex-1" disabled={saving}>
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
           </div>
+          
+          <p className="text-xs text-gray-500 text-center">
+            Tip: Press Ctrl+Enter (Cmd+Enter on Mac) to save quickly
+          </p>
         </div>
       </DialogContent>
     </Dialog>

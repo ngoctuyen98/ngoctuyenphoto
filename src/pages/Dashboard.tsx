@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Plus } from 'lucide-react';
 import PhotoUpload from '@/components/PhotoUpload';
+import PhotoActions from '@/components/PhotoActions';
 import Header from '@/components/Header';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -137,7 +138,7 @@ const Dashboard = () => {
             ) : photos.length > 0 ? (
               <div>
                 <h2 className="text-2xl font-thin text-gray-900 mb-6">Your Photos ({photos.length})</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                   {photos.map((photo) => (
                     <div key={photo.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                       <div className="aspect-square overflow-hidden relative">
@@ -146,25 +147,31 @@ const Dashboard = () => {
                           alt={photo.title}
                           className="w-full h-full object-cover"
                         />
-                        {photo.featured && (
-                          <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded">
-                            Featured
-                          </div>
-                        )}
-                        {photo.hidden && (
-                          <div className="absolute top-2 right-2 bg-gray-500 text-white px-2 py-1 text-xs rounded">
-                            Hidden
-                          </div>
-                        )}
+                        <div className="absolute top-2 left-2 flex gap-1">
+                          {photo.featured && (
+                            <div className="bg-yellow-500 text-white px-2 py-1 text-xs rounded">
+                              Featured
+                            </div>
+                          )}
+                          {photo.hidden && (
+                            <div className="bg-gray-500 text-white px-2 py-1 text-xs rounded">
+                              Hidden
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="p-4">
                         <h3 className="font-medium text-gray-900 mb-1">{photo.title}</h3>
                         <p className="text-sm text-gray-600 mb-2">{photo.description}</p>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-3">
                           <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                             {photo.category}
                           </span>
                         </div>
+                        <PhotoActions 
+                          photo={photo} 
+                          onPhotoUpdate={loadPhotos} 
+                        />
                       </div>
                     </div>
                   ))}
