@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import PhotoModal from './PhotoModal';
 
@@ -118,16 +119,22 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
     ? allPhotos 
     : allPhotos.filter(photo => photo.category === selectedCategory);
 
+  // Height variations for masonry effect
+  const getImageHeight = (index: number) => {
+    const heights = ['h-64', 'h-80', 'h-72', 'h-96', 'h-60', 'h-88'];
+    return heights[index % heights.length];
+  };
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
         {filteredPhotos.map((photo, index) => (
           <div 
             key={photo.id}
-            className="group cursor-pointer relative overflow-hidden"
+            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-8"
             onClick={() => setSelectedPhoto(photo)}
           >
-            <div className="relative overflow-hidden bg-gray-100 aspect-[4/5]">
+            <div className={`relative overflow-hidden bg-gray-100 ${getImageHeight(index)}`}>
               <img
                 src={photo.src}
                 alt={photo.alt}
