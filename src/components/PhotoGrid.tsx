@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { AspectRatio } from './ui/aspect-ratio';
 import PhotoModal from './PhotoModal';
@@ -121,14 +122,14 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
 
   return (
     <>
-      <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 sm:gap-6 lg:gap-8 space-y-4 sm:space-y-6 lg:space-y-8">
         {filteredPhotos.map((photo, index) => (
           <div 
             key={photo.id}
-            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-8"
+            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-4 sm:mb-6 lg:mb-8"
             onClick={() => setSelectedPhoto(photo)}
           >
-            <div className="relative overflow-hidden bg-gray-100">
+            <div className="relative overflow-hidden bg-gray-100 rounded-lg">
               <img
                 src={photo.src}
                 alt={photo.alt}
@@ -136,18 +137,18 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
                 loading="lazy"
               />
               {photo.featured && (
-                <div className="absolute top-4 left-4 bg-white/90 text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10">
+                <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-white/90 text-black px-2 sm:px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded">
                   Featured
                 </div>
               )}
               
               {/* Overlay that appears on hover */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end">
-                <div className="p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                  <h3 className="font-light text-xl mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end rounded-lg">
+                <div className="p-3 sm:p-4 lg:p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                  <h3 className="font-light text-lg sm:text-xl mb-1 sm:mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
                     {photo.title}
                   </h3>
-                  <p className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300">
+                  <p className="text-gray-200 text-xs sm:text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300">
                     {photo.description}
                   </p>
                 </div>
