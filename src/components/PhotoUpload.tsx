@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,17 +13,17 @@ interface PhotoUploadProps {
 }
 
 const categories = [
-  { id: 'portrait', name: 'Portrait' },
-  { id: 'landscape', name: 'Landscape' },
-  { id: 'wedding', name: 'Wedding' },
-  { id: 'street', name: 'Street' },
-  { id: 'nature', name: 'Nature' }
+  { id: 'Portrait', name: 'Portrait' },
+  { id: 'Landscape', name: 'Landscape' },
+  { id: 'Street', name: 'Street' },
+  { id: 'Travel', name: 'Travel' },
+  { id: 'Other', name: 'Other' }
 ];
 
 const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('portrait');
+  const [category, setCategory] = useState('Portrait');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +143,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       // Reset form
       setTitle('');
       setDescription('');
-      setCategory('portrait');
+      setCategory('Portrait');
       
       // Clean up preview URLs
       previewUrls.forEach(url => URL.revokeObjectURL(url));
