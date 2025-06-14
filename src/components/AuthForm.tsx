@@ -9,8 +9,10 @@ interface AuthFormProps {
   onSuccess: () => void;
 }
 
+const ALLOWED_EMAIL = '98nguyenngoctuyen@gmail.com';
+const ALLOWED_PASSWORD = 'tuyen123@';
+
 const AuthForm = ({ onSuccess }: AuthFormProps) => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,12 +23,22 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
     setLoading(true);
 
     try {
-      // TODO: Add Supabase auth logic here
-      console.log('Auth attempt:', { email, isLogin });
+      if (email !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
+        toast({
+          title: "Authentication failed",
+          description: "Invalid email or password.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Store auth state in localStorage
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userEmail', email);
       
-      // Simulate success for now
       toast({
-        title: isLogin ? "Login successful" : "Account created",
+        title: "Login successful",
         description: "Welcome to your photography portfolio!"
       });
       
@@ -45,12 +57,8 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-thin text-gray-900 mb-2">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </h2>
-        <p className="text-gray-600 font-light">
-          {isLogin ? 'Sign in to manage your portfolio' : 'Join to start sharing your photography'}
-        </p>
+        <h2 className="text-3xl font-thin text-gray-900 mb-2">Welcome Back</h2>
+        <p className="text-gray-600 font-light">Sign in to manage your portfolio</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -89,19 +97,9 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           disabled={loading}
           className="w-full bg-gray-900 hover:bg-gray-800 text-white font-light"
         >
-          {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
+          {loading ? 'Loading...' : 'Sign In'}
         </Button>
       </form>
-
-      <div className="mt-6 text-center">
-        <button
-          type="button"
-          onClick={() => setIsLogin(!isLogin)}
-          className="text-sm text-gray-600 hover:text-gray-900 font-light"
-        >
-          {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-        </button>
-      </div>
     </div>
   );
 };

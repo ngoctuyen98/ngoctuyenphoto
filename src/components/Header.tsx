@@ -1,12 +1,25 @@
 
 import { Camera, Menu, X, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
-  const isAuthenticated = false; // TODO: Get from auth context
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const authState = localStorage.getItem('isAuthenticated');
+      setIsAuthenticated(authState === 'true');
+    };
+    
+    checkAuth();
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuth);
+    
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
