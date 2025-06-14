@@ -1,4 +1,3 @@
-
 import { Camera, Menu, X, User, Home, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -46,9 +45,7 @@ const Header = () => {
           
           <nav className="hidden md:flex items-center space-x-12">
             {location.pathname === '/dashboard' ? (
-              <a href="/" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>
+              <a href="/" className="flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-black">
                 <Home className="h-4 w-4" />
                 <span>Home</span>
               </a>

@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, EyeOff, Star } from 'lucide-react';
+import { Trash2, EyeOff, Star, Edit3 } from 'lucide-react';
+import ImageEditor from './ImageEditor';
 
 interface Photo {
   id: string;
@@ -23,6 +24,7 @@ interface PhotoManagerProps {
 
 const PhotoManager = ({ photo, onPhotoUpdate }: PhotoManagerProps) => {
   const [loading, setLoading] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
   const { toast } = useToast();
 
   const updatePhoto = (updates: Partial<Photo>) => {
@@ -89,41 +91,82 @@ const PhotoManager = ({ photo, onPhotoUpdate }: PhotoManagerProps) => {
     });
   };
 
+  const handleEditorSave = (updatedPhoto: any) => {
+    updatePhoto({
+      title: updatedPhoto.title,
+      description: updatedPhoto.description
+    });
+  };
+
+  // Convert Photo to the format expected by ImageEditor
+  const editorPhoto = {
+    id: photo.id,
+    src: photo.url,
+    alt: photo.title,
+    category: photo.category,
+    title: photo.title,
+    description: photo.description,
+    hidden: photo.hidden,
+    featured: photo.featured
+  };
+
   return (
-    <div className="flex items-center space-x-2">
-      <Button
-        onClick={toggleFeatured}
-        variant="outline"
-        size="sm"
-        className={`font-light ${photo.featured ? 'bg-yellow-100 text-yellow-800' : ''}`}
-        disabled={loading}
-      >
-        <Star className={`w-4 h-4 mr-1 ${photo.featured ? 'fill-current' : ''}`} />
-        {photo.featured ? 'Featured' : 'Feature'}
-      </Button>
-      
-      <Button
-        onClick={toggleHidden}
-        variant="outline"
-        size="sm"
-        className={`font-light ${photo.hidden ? 'bg-gray-100 text-gray-600' : ''}`}
-        disabled={loading}
-      >
-        <EyeOff className="w-4 h-4 mr-1" />
-        {photo.hidden ? 'Hidden' : 'Hide'}
-      </Button>
-      
-      <Button
-        onClick={deletePhoto}
-        variant="outline"
-        size="sm"
-        className="font-light text-red-600 hover:bg-red-50"
-        disabled={loading}
-      >
-        <Trash2 className="w-4 h-4 mr-1" />
-        Delete
-      </Button>
-    </div>
+    <>
+      <div className="flex items-center space-x-2">
+        <Button
+          onClick={() => setShowEditor(true)}
+          variant="outline"
+          size="sm"
+          className="font-light"
+          disabled={loading}
+        >
+          <Edit3 className="w-4 h-4 mr-1" />
+          Edit
+        </Button>
+
+        <Button
+          onClick={toggleFeatured}
+          variant="outline"
+          size="sm"
+          className={`font-light ${photo.featured ? 'bg-yellow-100 text-yellow-800' : ''}`}
+          disabled={loading}
+        >
+          <Star className={`w-4 h-4 mr-1 ${photo.featured ? 'fill-current' : ''}`} />
+          {photo.featured ? 'Featured' : 'Feature'}
+        </Button>
+        
+        <Button
+          onClick={toggleHidden}
+          variant="outline"
+          size="sm"
+          className={`font-light ${photo.hidden ? 'bg-gray-100 text-gray-600' : ''}`}
+          disabled={loading}
+        >
+          <EyeOff className="w-4 h-4 mr-1" />
+          {photo.hidden ? 'Hidden' : 'Hide'}
+        </Button>
+        
+        <Button
+          onClick={deletePhoto}
+          variant="outline"
+          size="sm"
+          className="font-light text-red-600 hover:bg-red-50"
+          disabled={loading}
+        >
+          <Trash2 className="w-4 h-4 mr-1" />
+          Delete
+        </Button>
+      </div>
+
+      {showEditor && (
+        <ImageEditor
+          photo={editorPhoto}
+          isOpen={showEditor}
+          onClose={() => setShowEditor(false)}
+          onSave={handleEditorSave}
+        />
+      )}
+    </>
   );
 };
 
