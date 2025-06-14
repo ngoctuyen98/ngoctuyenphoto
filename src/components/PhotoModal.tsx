@@ -1,4 +1,5 @@
 
+```tsx
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -20,11 +21,14 @@ interface PhotoModalProps {
 const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [transformOrigin, setTransformOrigin] = useState<string>('center');
 
   // Find the current photo index when the modal opens or photo changes
   useEffect(() => {
     const index = photos.findIndex(p => p.id === photo.id);
     setCurrentPhotoIndex(index);
+    setIsZoomed(false); // Reset zoom state when photo changes
+    setTransformOrigin('center'); // Reset transform origin
   }, [photo, photos]);
 
   const currentPhoto = photos[currentPhotoIndex] || photo;
@@ -33,16 +37,35 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     const newIndex = currentPhotoIndex > 0 ? currentPhotoIndex - 1 : photos.length - 1;
     setCurrentPhotoIndex(newIndex);
     setIsZoomed(false);
+    setTransformOrigin('center');
   };
 
   const goToNext = () => {
     const newIndex = currentPhotoIndex < photos.length - 1 ? currentPhotoIndex + 1 : 0;
     setCurrentPhotoIndex(newIndex);
     setIsZoomed(false);
+    setTransformOrigin('center');
   };
 
-  const toggleZoom = () => {
-    setIsZoomed(!isZoomed);
+  const toggleZoom = (event?: React.MouseEvent<HTMLImageElement>) => {
+    if (!isZoomed && event) {
+      // Zooming IN
+      const imgElement = event.currentTarget;
+      // Get click coordinates relative to the image element
+      const offsetX = event.nativeEvent.offsetX;
+      const offsetY = event.nativeEvent.offsetY;
+
+      // Calculate transform origin as percentages
+      const originX = (offsetX / imgElement.offsetWidth) * 100 + '%';
+      const originY = (offsetY / imgElement.offsetHeight) * 100 + '%';
+      
+      setTransformOrigin(`${originX} ${originY}`);
+      setIsZoomed(true);
+    } else {
+      // Zooming OUT
+      setTransformOrigin('center');
+      setIsZoomed(false);
+    }
   };
 
   useEffect(() => {
@@ -65,7 +88,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [currentPhotoIndex, photos.length]);
+  }, [currentPhotoIndex, photos.length, onClose]); // Added onClose to dependencies
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -104,6 +127,7 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
               isZoomed ? 'scale-150' : 'scale-100'
             }`}
             onClick={toggleZoom}
+            style={{ transformOrigin: transformOrigin }}
           />
         </div>
         
@@ -120,10 +144,17 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
 
       <div 
         className="absolute inset-0 -z-10" 
-        onClick={onClose}
+        onClick={() => {
+          if (isZoomed) {
+            toggleZoom(); // Zoom out if clicking background while zoomed
+          } else {
+            onClose(); // Close modal if not zoomed
+          }
+        }}
       ></div>
     </div>
   );
 };
 
 export default PhotoModal;
+```
