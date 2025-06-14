@@ -32,14 +32,35 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   const [rotation, setRotation] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const { toast } = useToast();
 
+  // Reset state when photo changes or modal opens
   useEffect(() => {
-    if (isOpen && canvasRef.current) {
+    if (isOpen) {
+      setTitle(photo.title);
+      setDescription(photo.description);
+      setBrightness(100);
+      setContrast(100);
+      setSaturation(100);
+      setRotation(0);
+      setImageLoaded(false);
+    }
+  }, [isOpen, photo]);
+
+  useEffect(() => {
+    if (isOpen && canvasRef.current && !imageLoaded) {
       loadImageToCanvas();
     }
-  }, [isOpen, photo.src, brightness, contrast, saturation, rotation]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (imageLoaded && canvasRef.current) {
+      applyFiltersToCanvas();
+    }
+  }, [imageLoaded, brightness, contrast, saturation, rotation]);
 
   const loadImageToCanvas = () => {
     const canvas = canvasRef.current;
@@ -48,34 +69,64 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Create new image element
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    imageRef.current = img;
+
     img.onload = () => {
       // Set canvas dimensions
       canvas.width = Math.min(img.width, 600);
       canvas.height = (canvas.width / img.width) * img.height;
 
-      // Clear canvas
+      // Clear canvas and draw image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Apply transformations
-      ctx.save();
-      
-      // Apply rotation
-      if (rotation !== 0) {
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-      }
-
-      // Apply filters
-      ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-
-      // Draw image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.restore();
+      
+      setImageLoaded(true);
     };
+
+    img.onerror = () => {
+      console.error('Failed to load image:', photo.src);
+      toast({
+        title: "Image load failed",
+        description: "Could not load the image for editing.",
+        variant: "destructive"
+      });
+    };
+
+    // Set image source - handle both blob URLs and regular URLs
     img.src = photo.src;
+  };
+
+  const applyFiltersToCanvas = () => {
+    const canvas = canvasRef.current;
+    const img = imageRef.current;
+    if (!canvas || !img) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Save context state
+    ctx.save();
+    
+    // Apply rotation
+    if (rotation !== 0) {
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    }
+
+    // Apply filters
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+
+    // Draw image
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    // Restore context state
+    ctx.restore();
   };
 
   const handleRotate = () => {
@@ -148,10 +199,13 @@ const ImageEditor = ({ photo, isOpen, onClose, onSave }: ImageEditorProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Image Preview */}
           <div className="space-y-4">
-            <div className="border rounded-lg overflow-hidden bg-gray-50">
+            <div className="border rounded-lg overflow-hidden bg-gray-50 min-h-[300px] flex items-center justify-center">
+              {!imageLoaded && (
+                <div className="text-gray-500">Loading image...</div>
+              )}
               <canvas
                 ref={canvasRef}
-                className="w-full h-auto max-h-96 object-contain"
+                className={`w-full h-auto max-h-96 object-contain ${!imageLoaded ? 'hidden' : ''}`}
               />
             </div>
 
