@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +35,6 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       img.onload = () => {
         URL.revokeObjectURL(url);
         console.log(`Image dimensions: ${img.width} x ${img.height}`);
-        // Check if both width AND height are within limits (not OR)
         const isValidSize = img.width <= 6000 && img.height <= 6000;
         console.log(`Is valid size: ${isValidSize}`);
         resolve(isValidSize);
@@ -52,9 +50,54 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
     });
   };
 
+  const compressImage = (file: File, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      console.log('Compressing image:', file.name, 'Original size:', file.size);
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions to keep aspect ratio but reduce size if needed
+        let { width, height } = img;
+        const maxDimension = 2000; // Reduce max dimension for better compression
+        
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        console.log('Image compressed. New size estimate:', Math.round(compressedDataUrl.length * 0.75), 'bytes');
+        resolve(compressedDataUrl);
+        
+        URL.revokeObjectURL(img.src);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error('Failed to load image for compression'));
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      console.log('Converting file to base64:', file.name, file.size);
+      console.log('Processing file:', file.name, file.size);
       
       // Check file size (limit to 30MB)
       if (file.size > 30 * 1024 * 1024) {
@@ -68,16 +111,10 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        console.log('File converted successfully');
-        resolve(reader.result as string);
-      };
-      reader.onerror = error => {
-        console.error('FileReader error:', error);
-        reject(new Error('Failed to read file'));
-      };
+      // Use compression for better storage efficiency
+      compressImage(file, 0.8)
+        .then(resolve)
+        .catch(reject);
     });
   };
 
@@ -143,9 +180,6 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
     
     console.log('Starting upload process...');
     console.log('Selected files:', selectedFiles.length);
-    console.log('Title:', title);
-    console.log('Description:', description);
-    console.log('Category:', category);
 
     if (selectedFiles.length === 0) {
       toast({
@@ -168,24 +202,24 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
     setLoading(true);
 
     try {
-      console.log('Converting files to base64...');
+      console.log('Converting and compressing files...');
       
-      // Convert all files to base64
+      // Convert all files to compressed base64
       const base64Images = await Promise.all(
         selectedFiles.map(async (file, index) => {
           try {
-            console.log(`Converting file ${index + 1}/${selectedFiles.length}:`, file.name);
+            console.log(`Processing file ${index + 1}/${selectedFiles.length}:`, file.name);
             return await convertFileToBase64(file);
           } catch (error) {
-            console.error(`Error converting file ${file.name}:`, error);
+            console.error(`Error processing file ${file.name}:`, error);
             throw error;
           }
         })
       );
 
-      console.log('All files converted successfully');
+      console.log('All files processed successfully');
 
-      // Create photo objects with base64 data
+      // Create photo objects with compressed base64 data
       const uploadedPhotos = selectedFiles.map((file, index) => ({
         id: Date.now() + index,
         title: selectedFiles.length === 1 ? title : `${title} ${index + 1}`,
@@ -198,38 +232,50 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
 
       console.log('Created photo objects:', uploadedPhotos.length);
 
-      // Get existing photos from localStorage
-      const existingPhotos = localStorage.getItem('uploadedPhotos');
-      const allPhotos = existingPhotos ? JSON.parse(existingPhotos) : [];
-      
-      // Add new photos
-      const updatedPhotos = [...allPhotos, ...uploadedPhotos];
-      
-      // Save to localStorage
-      localStorage.setItem('uploadedPhotos', JSON.stringify(updatedPhotos));
-      console.log('Photos saved to localStorage');
+      try {
+        // Get existing photos from localStorage
+        const existingPhotos = localStorage.getItem('uploadedPhotos');
+        const allPhotos = existingPhotos ? JSON.parse(existingPhotos) : [];
+        
+        // Add new photos
+        const updatedPhotos = [...allPhotos, ...uploadedPhotos];
+        
+        // Save to localStorage with error handling
+        localStorage.setItem('uploadedPhotos', JSON.stringify(updatedPhotos));
+        console.log('Photos saved to localStorage successfully');
 
-      toast({
-        title: "Photos uploaded successfully",
-        description: `${selectedFiles.length} photo(s) have been added to your portfolio.`
-      });
+        toast({
+          title: "Photos uploaded successfully",
+          description: `${selectedFiles.length} photo(s) have been added to your portfolio.`
+        });
 
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setCategory('portrait');
-      
-      // Clean up preview URLs
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-      setSelectedFiles([]);
-      setPreviewUrls([]);
-      
-      console.log('Calling onUploadSuccess...');
-      onUploadSuccess(uploadedPhotos);
-      
-      // Dispatch event to update other components
-      window.dispatchEvent(new CustomEvent('photosUpdated'));
-      console.log('Upload process completed successfully');
+        // Reset form
+        setTitle('');
+        setDescription('');
+        setCategory('portrait');
+        
+        // Clean up preview URLs
+        previewUrls.forEach(url => URL.revokeObjectURL(url));
+        setSelectedFiles([]);
+        setPreviewUrls([]);
+        
+        console.log('Calling onUploadSuccess...');
+        onUploadSuccess(uploadedPhotos);
+        
+        // Dispatch event to update other components
+        window.dispatchEvent(new CustomEvent('photosUpdated'));
+        console.log('Upload process completed successfully');
+
+      } catch (storageError) {
+        console.error('localStorage error:', storageError);
+        
+        // If localStorage is full, suggest compression or cleanup
+        toast({
+          title: "Storage limit reached",
+          description: "Your browser's storage is full. Try uploading fewer photos at once or delete some existing photos.",
+          variant: "destructive"
+        });
+      }
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -269,6 +315,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
                     <span className="font-medium">Click to select multiple photos</span> or drag and drop
                   </p>
                   <p className="text-xs text-gray-500 font-light">PNG, JPG or JPEG (MAX. 30MB each, 6000x6000 pixels)</p>
+                  <p className="text-xs text-gray-500 font-light mt-1">Images will be compressed for optimal storage</p>
                 </div>
                 <input
                   id="photo-upload"
@@ -387,7 +434,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
           disabled={loading || selectedFiles.length === 0}
           className="w-full bg-gray-900 hover:bg-gray-800 text-white font-light"
         >
-          {loading ? 'Uploading...' : `Upload ${selectedFiles.length || ''} Photo${selectedFiles.length !== 1 ? 's' : ''}`}
+          {loading ? 'Processing...' : `Upload ${selectedFiles.length || ''} Photo${selectedFiles.length !== 1 ? 's' : ''}`}
         </Button>
       </form>
     </div>
