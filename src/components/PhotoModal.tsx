@@ -1,4 +1,3 @@
-
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -70,6 +69,8 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       
       setTransformOrigin(`${originX}% ${originY}%`);
       setZoomLevel(2);
+      // Reset pan offset when zooming in
+      setPanOffset({ x: 0, y: 0 });
     } else {
       // Reset to fit view
       resetZoom();
@@ -90,6 +91,8 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
       
       setTransformOrigin(`${originX}% ${originY}%`);
       setZoomLevel(3);
+      // Reset pan offset when zooming in
+      setPanOffset({ x: 0, y: 0 });
     } else {
       resetZoom();
     }
@@ -102,17 +105,23 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel + delta));
     
     if (newZoom !== zoomLevel) {
+      // If zooming out to 1x or less, reset pan offset
+      if (newZoom <= 1) {
+        setPanOffset({ x: 0, y: 0 });
+        setTransformOrigin('center center');
+      } else {
+        // Set transform origin to mouse position for wheel zoom
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        const originX = (x / rect.width) * 100;
+        const originY = (y / rect.height) * 100;
+        
+        setTransformOrigin(`${originX}% ${originY}%`);
+      }
+      
       setZoomLevel(newZoom);
-      
-      // Set transform origin to mouse position for wheel zoom
-      const rect = event.currentTarget.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      
-      const originX = (x / rect.width) * 100;
-      const originY = (y / rect.height) * 100;
-      
-      setTransformOrigin(`${originX}% ${originY}%`);
     }
   };
 
@@ -145,13 +154,27 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   const zoomIn = () => {
     const currentIndex = zoomLevels.findIndex(level => level >= zoomLevel);
     const nextIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
-    setZoomLevel(zoomLevels[nextIndex]);
+    const newZoom = zoomLevels[nextIndex];
+    
+    if (newZoom <= 1) {
+      setPanOffset({ x: 0, y: 0 });
+      setTransformOrigin('center center');
+    }
+    
+    setZoomLevel(newZoom);
   };
 
   const zoomOut = () => {
     const currentIndex = zoomLevels.findIndex(level => level >= zoomLevel);
     const prevIndex = Math.max(currentIndex - 1, 0);
-    setZoomLevel(zoomLevels[prevIndex]);
+    const newZoom = zoomLevels[prevIndex];
+    
+    if (newZoom <= 1) {
+      setPanOffset({ x: 0, y: 0 });
+      setTransformOrigin('center center');
+    }
+    
+    setZoomLevel(newZoom);
   };
 
   useEffect(() => {
@@ -198,10 +221,18 @@ const PhotoModal = ({ photo, photos, onClose }: PhotoModalProps) => {
   };
 
   const getImageStyle = () => {
+    if (zoomLevel <= 1) {
+      return {
+        transform: 'scale(1)',
+        transformOrigin: 'center center',
+        cursor: 'zoom-in'
+      };
+    }
+    
     return {
       transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
       transformOrigin: transformOrigin,
-      cursor: zoomLevel > 1 ? (isPanning ? 'grabbing' : 'grab') : 'zoom-in'
+      cursor: isPanning ? 'grabbing' : 'grab'
     };
   };
 
