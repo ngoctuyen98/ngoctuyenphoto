@@ -99,7 +99,7 @@ const Header = () => {
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/10">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-black/15 backdrop-blur-md border-t border-white/10">
             <nav className="flex flex-col space-y-6 p-8">
               {location.pathname === '/dashboard' ? (
                 <a href="/" className="text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 text-white">
