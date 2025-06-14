@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { AspectRatio } from './ui/aspect-ratio';
 import PhotoModal from './PhotoModal';
@@ -65,10 +66,11 @@ const defaultPhotos: Photo[] = [
 ];
 
 interface PhotoGridProps {
-  selectedCategory: string;
+  photos?: Photo[];
+  selectedCategory?: string;
 }
 
-const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
+const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
 
@@ -113,8 +115,8 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
     };
   }, []);
 
-  // Combine uploaded photos with default photos, sort by featured status
-  const allPhotos = [...uploadedPhotos, ...defaultPhotos].sort((a, b) => {
+  // Use passed photos or combine uploaded photos with default photos, sort by featured status
+  const allPhotos = photos.length > 0 ? photos : [...uploadedPhotos, ...defaultPhotos].sort((a, b) => {
     if (a.featured && !b.featured) return -1;
     if (!a.featured && b.featured) return 1;
     return 0;
