@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import PhotoModal from './PhotoModal';
 
@@ -9,6 +8,8 @@ interface Photo {
   category: string;
   title: string;
   description: string;
+  hidden?: boolean;
+  featured?: boolean;
 }
 
 const defaultPhotos: Photo[] = [
@@ -74,15 +75,18 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
     const savedPhotos = localStorage.getItem('uploadedPhotos');
     if (savedPhotos) {
       const parsedPhotos = JSON.parse(savedPhotos);
-      // Convert uploaded photos to the Photo interface format
-      const convertedPhotos: Photo[] = parsedPhotos.map((photo: any) => ({
-        id: photo.id.toString(),
-        src: photo.url,
-        alt: photo.title,
-        category: photo.category,
-        title: photo.title,
-        description: photo.description
-      }));
+      // Convert uploaded photos to the Photo interface format and filter out hidden ones
+      const convertedPhotos: Photo[] = parsedPhotos
+        .filter((photo: any) => !photo.hidden) // Only show non-hidden photos
+        .map((photo: any) => ({
+          id: photo.id.toString(),
+          src: photo.url,
+          alt: photo.title,
+          category: photo.category,
+          title: photo.title,
+          description: photo.description,
+          featured: photo.featured
+        }));
       setUploadedPhotos(convertedPhotos);
     }
   };
@@ -103,8 +107,12 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
     };
   }, []);
 
-  // Combine uploaded photos with default photos (uploaded photos first)
-  const allPhotos = [...uploadedPhotos, ...defaultPhotos];
+  // Combine uploaded photos with default photos, sort by featured status
+  const allPhotos = [...uploadedPhotos, ...defaultPhotos].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  });
 
   const filteredPhotos = selectedCategory === 'all' 
     ? allPhotos 
@@ -119,13 +127,18 @@ const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
             className="group cursor-pointer"
             onClick={() => setSelectedPhoto(photo)}
           >
-            <div className="aspect-square overflow-hidden bg-gray-100">
+            <div className="aspect-square overflow-hidden bg-gray-100 relative">
               <img
                 src={photo.src}
                 alt={photo.alt}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
+              {photo.featured && (
+                <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded">
+                  Featured
+                </div>
+              )}
             </div>
             <div className="mt-4">
               <h3 className="font-light text-lg text-gray-900">{photo.title}</h3>

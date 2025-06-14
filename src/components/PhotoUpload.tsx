@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,13 +27,33 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const validateImageDimensions = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const isValidSize = img.width <= 6000 && img.height <= 4000;
+        resolve(isValidSize);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(false);
+      };
+      
+      img.src = url;
+    });
+  };
+
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       console.log('Converting file to base64:', file.name, file.size);
       
-      // Check file size (limit to 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        reject(new Error('File size too large. Maximum 10MB allowed.'));
+      // Check file size (limit to 30MB)
+      if (file.size > 30 * 1024 * 1024) {
+        reject(new Error('File size too large. Maximum 30MB allowed.'));
         return;
       }
 
@@ -57,14 +76,37 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setSelectedFiles(files);
+      // Validate dimensions for each file
+      const validFiles = [];
+      const invalidFiles = [];
       
-      // Create preview URLs
-      const urls = files.map(file => URL.createObjectURL(file));
-      setPreviewUrls(urls);
+      for (const file of files) {
+        const isValidDimensions = await validateImageDimensions(file);
+        if (isValidDimensions) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(file.name);
+        }
+      }
+      
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "Invalid image dimensions",
+          description: `The following files exceed 6000x4000 pixels: ${invalidFiles.join(', ')}`,
+          variant: "destructive"
+        });
+      }
+      
+      if (validFiles.length > 0) {
+        setSelectedFiles(validFiles);
+        
+        // Create preview URLs
+        const urls = validFiles.map(file => URL.createObjectURL(file));
+        setPreviewUrls(urls);
+      }
     }
   };
 
@@ -215,7 +257,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
                   <p className="mb-2 text-sm text-gray-500 font-light">
                     <span className="font-medium">Click to select multiple photos</span> or drag and drop
                   </p>
-                  <p className="text-xs text-gray-500 font-light">PNG, JPG or JPEG (MAX. 10MB each)</p>
+                  <p className="text-xs text-gray-500 font-light">PNG, JPG or JPEG (MAX. 30MB each, 6000x4000 pixels)</p>
                 </div>
                 <input
                   id="photo-upload"
