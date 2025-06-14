@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Plus } from 'lucide-react';
@@ -39,6 +38,9 @@ const Dashboard = () => {
     setPhotos(allPhotos);
     localStorage.setItem('uploadedPhotos', JSON.stringify(allPhotos));
     setShowUpload(false);
+    
+    // Dispatch a custom event to notify other components about the photo update
+    window.dispatchEvent(new CustomEvent('photosUpdated'));
   };
 
   return (

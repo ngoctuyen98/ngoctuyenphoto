@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PhotoModal from './PhotoModal';
 
 interface Photo {
@@ -11,7 +11,7 @@ interface Photo {
   description: string;
 }
 
-const photos: Photo[] = [
+const defaultPhotos: Photo[] = [
   {
     id: '1',
     src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
@@ -68,10 +68,47 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ selectedCategory }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
+
+  const loadUploadedPhotos = () => {
+    const savedPhotos = localStorage.getItem('uploadedPhotos');
+    if (savedPhotos) {
+      const parsedPhotos = JSON.parse(savedPhotos);
+      // Convert uploaded photos to the Photo interface format
+      const convertedPhotos: Photo[] = parsedPhotos.map((photo: any) => ({
+        id: photo.id.toString(),
+        src: photo.url,
+        alt: photo.title,
+        category: photo.category,
+        title: photo.title,
+        description: photo.description
+      }));
+      setUploadedPhotos(convertedPhotos);
+    }
+  };
+
+  useEffect(() => {
+    // Load uploaded photos from localStorage on initial render
+    loadUploadedPhotos();
+
+    // Listen for photo updates
+    const handlePhotosUpdated = () => {
+      loadUploadedPhotos();
+    };
+
+    window.addEventListener('photosUpdated', handlePhotosUpdated);
+    
+    return () => {
+      window.removeEventListener('photosUpdated', handlePhotosUpdated);
+    };
+  }, []);
+
+  // Combine uploaded photos with default photos (uploaded photos first)
+  const allPhotos = [...uploadedPhotos, ...defaultPhotos];
 
   const filteredPhotos = selectedCategory === 'all' 
-    ? photos 
-    : photos.filter(photo => photo.category === selectedCategory);
+    ? allPhotos 
+    : allPhotos.filter(photo => photo.category === selectedCategory);
 
   return (
     <>
