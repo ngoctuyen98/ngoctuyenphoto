@@ -20,40 +20,6 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       <Header />
       <Hero />
-      
-      <main className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-thin text-gray-900 mb-4">Featured Work</h2>
-          <p className="text-gray-600 font-light mb-8">
-            Discover beautiful photography from our talented community
-          </p>
-          
-          {!user && (
-            <div className="space-x-4">
-              <Link to="/auth">
-                <Button className="bg-gray-900 hover:bg-gray-800 text-white font-light">
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button variant="outline" className="font-light">
-                  Create Account
-                </Button>
-              </Link>
-            </div>
-          )}
-          
-          {user && (
-            <Link to="/dashboard">
-              <Button className="bg-gray-900 hover:bg-gray-800 text-white font-light">
-                Go to Dashboard
-              </Button>
-            </Link>
-          )}
-        </div>
-
-        <PhotoGrid />
-      </main>
 
       {/* About Section */}
       <section id="about" className="py-32 bg-gray-50">
