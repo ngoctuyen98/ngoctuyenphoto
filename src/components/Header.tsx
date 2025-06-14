@@ -45,37 +45,37 @@ const Header = () => {
           </a>
           
           <nav className="hidden md:flex items-center space-x-12">
-            <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-              isScrolled ? 'text-gray-800' : 'text-white'
-            }`}>Work</a>
-            <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-              isScrolled ? 'text-gray-800' : 'text-white'
-            }`}>Portfolio</a>
-            <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-              isScrolled ? 'text-gray-800' : 'text-white'
-            }`}>About</a>
-            <a href="/#contact" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-              isScrolled ? 'text-gray-800' : 'text-white'
-            }`}>Contact</a>
-            
-            {isAuthenticated && (
+            {location.pathname === '/dashboard' ? (
+              <a href="/" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                isScrolled ? 'text-gray-800' : 'text-white'
+              }`}>
+                <Home className="h-4 w-4" />
+                <span>Home</span>
+              </a>
+            ) : (
               <>
-                {location.pathname === '/dashboard' ? (
-                  <a href="/" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>
-                    <Home className="h-4 w-4" />
-                    <span>Home</span>
-                  </a>
-                ) : (
-                  <a href="/dashboard" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  }`}>
-                    <User className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </a>
-                )}
+                <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>Work</a>
+                <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>Portfolio</a>
+                <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>About</a>
+                <a href="/#contact" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>Contact</a>
               </>
+            )}
+            
+            {isAuthenticated && location.pathname !== '/dashboard' && (
+              <a href="/dashboard" className={`flex items-center space-x-2 text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                isScrolled ? 'text-gray-800' : 'text-white'
+              }`}>
+                <User className="h-4 w-4" />
+                <span>Dashboard</span>
+              </a>
             )}
           </nav>
 
@@ -92,31 +92,31 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-6 border-t border-gray-100/20">
             <nav className="flex flex-col space-y-6">
-              <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>Work</a>
-              <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>Portfolio</a>
-              <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>About</a>
-              <a href="/#contact" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                isScrolled ? 'text-gray-800' : 'text-white'
-              }`}>Contact</a>
-              
-              {isAuthenticated && (
+              {location.pathname === '/dashboard' ? (
+                <a href="/" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>Home</a>
+              ) : (
                 <>
-                  {location.pathname === '/dashboard' ? (
-                    <a href="/" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                      isScrolled ? 'text-gray-800' : 'text-white'
-                    }`}>Home</a>
-                  ) : (
-                    <a href="/dashboard" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
-                      isScrolled ? 'text-gray-800' : 'text-white'
-                    }`}>Dashboard</a>
-                  )}
+                  <a href="/#home" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>Work</a>
+                  <a href="/#portfolio" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>Portfolio</a>
+                  <a href="/#about" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>About</a>
+                  <a href="/#contact" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                    isScrolled ? 'text-gray-800' : 'text-white'
+                  }`}>Contact</a>
                 </>
+              )}
+              
+              {isAuthenticated && location.pathname !== '/dashboard' && (
+                <a href="/dashboard" className={`text-sm tracking-[0.1em] uppercase font-light transition-colors hover:opacity-70 ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}>Dashboard</a>
               )}
             </nav>
           </div>
