@@ -75,11 +75,16 @@ const ImageSlideshow = () => {
   };
 
   useEffect(() => {
+    console.log('Setting up slideshow photos...');
+    console.log('Database photos:', dbPhotos.length);
+    
     // Combine database photos with default photos
     const allPhotos = [...dbPhotos, ...defaultPhotos];
+    console.log('All photos combined:', allPhotos.length);
     
     // Get only featured photos
     const featuredPhotos = allPhotos.filter(photo => photo.featured);
+    console.log('Featured photos:', featuredPhotos.length);
     
     // Always show one random featured photo per category, regardless of selected category
     const categories = ['portrait', 'landscape', 'wedding', 'street', 'nature'];
@@ -87,33 +92,47 @@ const ImageSlideshow = () => {
     
     categories.forEach(category => {
       const categoryFeaturedPhotos = featuredPhotos.filter(photo => photo.category === category);
+      console.log(`Featured photos in ${category}:`, categoryFeaturedPhotos.length);
       
       if (categoryFeaturedPhotos.length > 0) {
         // Get random featured photo from this category
         const randomPhoto = getRandomPhoto(categoryFeaturedPhotos);
         if (randomPhoto) {
           categoryFeatured.push(randomPhoto);
+          console.log(`Added random ${category} photo:`, randomPhoto.title);
         }
       } else {
         // Fall back to default photo for this category
         const defaultPhoto = defaultPhotos.find(photo => photo.category === category);
         if (defaultPhoto) {
           categoryFeatured.push(defaultPhoto);
+          console.log(`Added default ${category} photo:`, defaultPhoto.title);
         }
       }
     });
     
+    console.log('Final slideshow photos:', categoryFeatured.length);
     setSlideshowPhotos(categoryFeatured);
     setCurrentIndex(0);
   }, [dbPhotos]);
 
   useEffect(() => {
+    console.log('Setting up slideshow interval, photos count:', slideshowPhotos.length);
+    
     if (slideshowPhotos.length > 1) {
       const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % slideshowPhotos.length);
+        console.log('Auto-advancing slideshow');
+        setCurrentIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % slideshowPhotos.length;
+          console.log(`Moving from index ${prevIndex} to ${nextIndex}`);
+          return nextIndex;
+        });
       }, 4000);
 
-      return () => clearInterval(interval);
+      return () => {
+        console.log('Cleaning up slideshow interval');
+        clearInterval(interval);
+      };
     }
   }, [slideshowPhotos.length]);
 
@@ -128,8 +147,11 @@ const ImageSlideshow = () => {
   };
 
   if (slideshowPhotos.length === 0) {
+    console.log('No slideshow photos available');
     return null;
   }
+
+  console.log('Rendering slideshow with', slideshowPhotos.length, 'photos, current index:', currentIndex);
 
   return (
     <div className="relative w-full h-96 mb-12 overflow-hidden rounded-lg group">
