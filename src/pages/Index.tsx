@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { Camera, Grid, User, Mail } from 'lucide-react';
 import PhotoGrid from '../components/PhotoGrid';
 import CategoryFilter from '../components/CategoryFilter';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
+import ImageSlideshow from '../components/ImageSlideshow';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -18,6 +18,7 @@ const Index = () => {
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
         />
+        <ImageSlideshow selectedCategory={selectedCategory} />
         <PhotoGrid selectedCategory={selectedCategory} />
       </main>
       <footer className="bg-gray-900 text-white py-12">
