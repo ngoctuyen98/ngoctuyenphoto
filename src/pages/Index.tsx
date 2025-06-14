@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -5,7 +6,6 @@ import { Instagram, Facebook } from 'lucide-react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import PhotoGrid from '@/components/PhotoGrid';
-import ImageSlideshow from '@/components/ImageSlideshow';
 import CategoryFilter from '@/components/CategoryFilter';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePhotos } from '@/hooks/usePhotos';
@@ -51,9 +51,6 @@ const Index = () => {
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
-          <div className="mb-20">
-            <ImageSlideshow />
-          </div>
           
           {loading ? (
             <div className="text-center py-16">
