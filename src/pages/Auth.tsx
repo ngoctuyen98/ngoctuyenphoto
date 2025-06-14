@@ -9,11 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -38,29 +37,20 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
+      const { error } = await signIn(email, password);
 
       if (error) {
         toast({
-          title: isSignUp ? "Sign up failed" : "Sign in failed",
+          title: "Sign in failed",
           description: error.message,
           variant: "destructive"
         });
       } else {
-        if (isSignUp) {
-          toast({
-            title: "Account created",
-            description: "Please check your email to verify your account."
-          });
-        } else {
-          toast({
-            title: "Welcome back!",
-            description: "You have been signed in successfully."
-          });
-          navigate('/dashboard');
-        }
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully."
+        });
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({
@@ -81,13 +71,10 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-thin text-gray-900 mb-2">
-              {isSignUp ? 'Create Account' : 'Sign In'}
+              Sign In
             </h1>
             <p className="text-gray-600 font-light">
-              {isSignUp 
-                ? 'Join to start building your photography portfolio' 
-                : 'Welcome back to your photography portfolio'
-              }
+              Welcome back to your photography portfolio
             </p>
           </div>
 
@@ -128,21 +115,9 @@ const Auth = () => {
               disabled={loading}
               className="w-full bg-gray-900 hover:bg-gray-800 text-white font-light"
             >
-              {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-gray-600 hover:text-gray-900 font-light"
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"
-              }
-            </button>
-          </div>
         </div>
       </main>
     </div>
