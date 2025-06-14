@@ -71,10 +71,20 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  };
+
+  const handleImageLoad = (photoId: string) => {
+    setLoadedImages(prev => new Set(prev).add(photoId));
+  };
+
+  const handleImageError = (photoId: string) => {
+    setFailedImages(prev => new Set(prev).add(photoId));
   };
 
   // Use passed photos or fall back to default photos, sort by featured status
@@ -107,40 +117,65 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
             style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}
           >
             <div className="relative overflow-hidden">
+              {/* Loading placeholder */}
+              {!loadedImages.has(photo.id) && !failedImages.has(photo.id) && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+                  <div className="text-gray-400 text-sm">Loading...</div>
+                </div>
+              )}
+              
+              {/* Error fallback */}
+              {failedImages.has(photo.id) && (
+                <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center min-h-[200px]">
+                  <div className="text-gray-400 text-sm text-center p-4">
+                    <div className="mb-2">Failed to load image</div>
+                    <div className="text-xs">{photo.title}</div>
+                  </div>
+                </div>
+              )}
+
               <img
                 src={photo.src}
                 alt={photo.alt}
-                className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 rounded-lg"
+                className={`w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 rounded-lg ${
+                  loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
+                }`}
                 loading="lazy"
+                decoding="async"
+                onLoad={() => handleImageLoad(photo.id)}
+                onError={() => handleImageError(photo.id)}
                 style={{ 
                   display: 'block',
                   width: '100%',
                   height: 'auto'
                 }}
               />
-              {photo.featured && (
+              
+              {photo.featured && loadedImages.has(photo.id) && (
                 <div className="absolute top-3 left-3 bg-white/90 text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-sm">
                   Featured
                 </div>
               )}
               
               {/* Overlay that appears on hover */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end rounded-lg">
-                <div className="p-4 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                  <h3 
-                    className="font-light text-lg mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
-                    title={photo.title}
-                  >
-                    {truncateText(photo.title, 30)}
-                  </h3>
-                  <p 
-                    className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"
-                    title={photo.description}
-                  >
-                    {truncateText(photo.description, 80)}
-                  </p>
+              {loadedImages.has(photo.id) && (
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end rounded-lg">
+                  <div className="p-4 text-white transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                    <h3 
+                      className="font-light text-lg mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
+                      title={photo.title}
+                    >
+                      {truncateText(photo.title, 30)}
+                    </h3>
+                    <p 
+                      className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"
+                      title={photo.description}
+                    >
+                      {truncateText(photo.description, 80)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         ))}
