@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,12 +35,16 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
       
       img.onload = () => {
         URL.revokeObjectURL(url);
-        const isValidSize = img.width <= 6000 && img.height <= 4000;
+        console.log(`Image dimensions: ${img.width} x ${img.height}`);
+        // Check if both width AND height are within limits (not OR)
+        const isValidSize = img.width <= 6000 && img.height <= 6000;
+        console.log(`Is valid size: ${isValidSize}`);
         resolve(isValidSize);
       };
       
       img.onerror = () => {
         URL.revokeObjectURL(url);
+        console.log('Error loading image for dimension validation');
         resolve(false);
       };
       
@@ -79,23 +84,28 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
+      console.log(`Selected ${files.length} files for validation`);
+      
       // Validate dimensions for each file
       const validFiles = [];
       const invalidFiles = [];
       
       for (const file of files) {
+        console.log(`Validating file: ${file.name}`);
         const isValidDimensions = await validateImageDimensions(file);
         if (isValidDimensions) {
           validFiles.push(file);
+          console.log(`✓ Valid: ${file.name}`);
         } else {
           invalidFiles.push(file.name);
+          console.log(`✗ Invalid: ${file.name}`);
         }
       }
       
       if (invalidFiles.length > 0) {
         toast({
           title: "Invalid image dimensions",
-          description: `The following files exceed 6000x4000 pixels: ${invalidFiles.join(', ')}`,
+          description: `The following files exceed 6000x6000 pixels: ${invalidFiles.join(', ')}`,
           variant: "destructive"
         });
       }
@@ -106,6 +116,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
         // Create preview URLs
         const urls = validFiles.map(file => URL.createObjectURL(file));
         setPreviewUrls(urls);
+        console.log(`${validFiles.length} valid files selected`);
       }
     }
   };
@@ -257,7 +268,7 @@ const PhotoUpload = ({ onUploadSuccess }: PhotoUploadProps) => {
                   <p className="mb-2 text-sm text-gray-500 font-light">
                     <span className="font-medium">Click to select multiple photos</span> or drag and drop
                   </p>
-                  <p className="text-xs text-gray-500 font-light">PNG, JPG or JPEG (MAX. 30MB each, 6000x4000 pixels)</p>
+                  <p className="text-xs text-gray-500 font-light">PNG, JPG or JPEG (MAX. 30MB each, 6000x6000 pixels)</p>
                 </div>
                 <input
                   id="photo-upload"
