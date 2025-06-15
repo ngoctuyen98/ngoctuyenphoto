@@ -1,7 +1,8 @@
-
 import { useState } from 'react';
 import PhotoModal from './PhotoModal';
+import LoadingSpinner from './LoadingSpinner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface Photo {
   id: string;
@@ -76,6 +77,24 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
+  // Use passed photos or fall back to default photos, sort by featured status
+  const allPhotos = photos.length > 0 ? photos.sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  }) : defaultPhotos;
+
+  const filteredPhotos = selectedCategory === 'all' 
+    ? allPhotos 
+    : allPhotos.filter(photo => photo.category === selectedCategory);
+
+  // Use infinite scroll hook
+  const { displayedItems: displayedPhotos, loading: infiniteLoading, hasMore } = useInfiniteScroll({
+    items: filteredPhotos,
+    itemsPerPage: 6,
+    threshold: 200
+  });
+
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -102,17 +121,6 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
   const handleImageLoadStart = (photoId: string) => {
     setLoadingImages(prev => new Set(prev).add(photoId));
   };
-
-  // Use passed photos or fall back to default photos, sort by featured status
-  const allPhotos = photos.length > 0 ? photos.sort((a, b) => {
-    if (a.featured && !b.featured) return -1;
-    if (!a.featured && b.featured) return 1;
-    return 0;
-  }) : defaultPhotos;
-
-  const filteredPhotos = selectedCategory === 'all' 
-    ? allPhotos 
-    : allPhotos.filter(photo => photo.category === selectedCategory);
 
   return (
     <>
@@ -184,7 +192,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
           columnFill: 'balance'
         }}
       >
-        {filteredPhotos.map((photo, index) => (
+        {displayedPhotos.map((photo, index) => (
           <div 
             key={photo.id}
             className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-5 bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
@@ -192,7 +200,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
             style={{ 
               pageBreakInside: 'avoid', 
               breakInside: 'avoid',
-              animationDelay: `${index * 100}ms`,
+              animationDelay: `${(index % 6) * 100}ms`,
               animation: 'fadeInUp 0.8s ease-out forwards',
               opacity: 0
             }}
@@ -277,10 +285,22 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
         ))}
       </div>
 
+      {/* Loading spinner for infinite scroll */}
+      {infiniteLoading && <LoadingSpinner />}
+
+      {/* End of content indicator */}
+      {!hasMore && displayedPhotos.length > 0 && (
+        <div className="text-center py-16">
+          <div className="text-gray-400 font-light text-sm tracking-wide">
+            You've reached the end
+          </div>
+        </div>
+      )}
+
       {selectedPhoto && (
         <PhotoModal 
           photo={selectedPhoto}
-          photos={filteredPhotos}
+          photos={displayedPhotos}
           onClose={() => setSelectedPhoto(null)} 
         />
       )}
