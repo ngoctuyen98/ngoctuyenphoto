@@ -176,23 +176,47 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
           .animate-slideInLeft {
             animation: slideInLeft 0.6s ease-out forwards;
           }
+
+          .masonry-grid {
+            column-count: 1;
+            column-gap: 1.25rem;
+            column-fill: balance;
+          }
+
+          @media (min-width: 768px) {
+            .masonry-grid {
+              column-count: 2;
+            }
+          }
+
+          @media (min-width: 1024px) {
+            .masonry-grid {
+              column-count: 3;
+            }
+          }
+
+          .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1.25rem;
+            display: inline-block;
+            width: 100%;
+          }
         `}
       </style>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="masonry-grid">
         {displayedPhotos.map((photo, index) => {
           const imageState = getImageState(photo.id);
           
           return (
             <div 
               key={photo.id}
-              className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
+              className="masonry-item group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
               onClick={() => setSelectedPhoto(photo)}
               style={{ 
                 animationDelay: `${(index % 6) * 100}ms`,
                 animation: 'fadeInUp 0.8s ease-out forwards',
-                opacity: 0,
-                minHeight: '200px'
+                opacity: 0
               }}
             >
               <div className="relative overflow-hidden">
