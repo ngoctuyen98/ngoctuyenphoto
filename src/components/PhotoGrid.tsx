@@ -74,9 +74,7 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
-  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [imageStates, setImageStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
 
   // Use passed photos or fall back to default photos, sort by featured status
   const allPhotos = photos.length > 0 ? photos.sort((a, b) => {
@@ -102,25 +100,22 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
   };
 
   const handleImageLoad = (photoId: string) => {
-    setLoadedImages(prev => new Set(prev).add(photoId));
-    setLoadingImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(photoId);
-      return newSet;
-    });
+    console.log('Image loaded:', photoId);
+    setImageStates(prev => ({ ...prev, [photoId]: 'loaded' }));
   };
 
   const handleImageError = (photoId: string) => {
-    setFailedImages(prev => new Set(prev).add(photoId));
-    setLoadingImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(photoId);
-      return newSet;
-    });
+    console.log('Image error:', photoId);
+    setImageStates(prev => ({ ...prev, [photoId]: 'error' }));
   };
 
   const handleImageLoadStart = (photoId: string) => {
-    setLoadingImages(prev => new Set(prev).add(photoId));
+    console.log('Image load start:', photoId);
+    setImageStates(prev => ({ ...prev, [photoId]: 'loading' }));
+  };
+
+  const getImageState = (photoId: string) => {
+    return imageStates[photoId] || 'loading';
   };
 
   return (
@@ -185,95 +180,100 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
       </style>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {displayedPhotos.map((photo, index) => (
-          <div 
-            key={photo.id}
-            className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
-            onClick={() => setSelectedPhoto(photo)}
-            style={{ 
-              animationDelay: `${(index % 6) * 100}ms`,
-              animation: 'fadeInUp 0.8s ease-out forwards',
-              opacity: 0
-            }}
-          >
-            <div className="relative overflow-hidden">
-              {/* Progressive loading skeleton */}
-              {!loadedImages.has(photo.id) && !failedImages.has(photo.id) && (
-                <div className="relative">
-                  <Skeleton className="w-full h-64 rounded-lg" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_400%] animate-gradient rounded-lg">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                        <div className="text-gray-400 text-sm font-light">Loading...</div>
+        {displayedPhotos.map((photo, index) => {
+          const imageState = getImageState(photo.id);
+          
+          return (
+            <div 
+              key={photo.id}
+              className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
+              onClick={() => setSelectedPhoto(photo)}
+              style={{ 
+                animationDelay: `${(index % 6) * 100}ms`,
+                animation: 'fadeInUp 0.8s ease-out forwards',
+                opacity: 0,
+                minHeight: '200px'
+              }}
+            >
+              <div className="relative overflow-hidden">
+                {/* Loading skeleton - show when loading */}
+                {imageState === 'loading' && (
+                  <div className="relative">
+                    <Skeleton className="w-full h-64 rounded-lg" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_400%] animate-gradient rounded-lg">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex flex-col items-center space-y-2">
+                          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          <div className="text-gray-400 text-sm font-light">Loading...</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {/* Error fallback with smooth transition */}
-              {failedImages.has(photo.id) && (
-                <div className="bg-gray-50 rounded-lg flex items-center justify-center min-h-[200px] transition-all duration-500">
-                  <div className="text-gray-400 text-sm text-center p-4">
-                    <div className="mb-2 opacity-0 animate-fadeIn" style={{ animationDelay: '200ms' }}>Failed to load image</div>
-                    <div className="text-xs opacity-0 animate-fadeIn" style={{ animationDelay: '400ms' }}>{photo.title}</div>
+                )}
+                
+                {/* Error fallback - show when error */}
+                {imageState === 'error' && (
+                  <div className="bg-gray-50 rounded-lg flex items-center justify-center min-h-[200px] transition-all duration-500">
+                    <div className="text-gray-400 text-sm text-center p-4">
+                      <div className="mb-2 opacity-0 animate-fadeIn" style={{ animationDelay: '200ms' }}>Failed to load image</div>
+                      <div className="text-xs opacity-0 animate-fadeIn" style={{ animationDelay: '400ms' }}>{photo.title}</div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Main image with progressive loading */}
-              <div className="relative">
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  className={`w-full h-auto object-cover transition-all duration-1000 ease-out group-hover:scale-105 rounded-lg ${
-                    loadedImages.has(photo.id) 
-                      ? 'opacity-100 blur-0 scale-100' 
-                      : 'opacity-0 blur-sm scale-105'
-                  }`}
-                  loading="lazy"
-                  decoding="async"
-                  onLoadStart={() => handleImageLoadStart(photo.id)}
-                  onLoad={() => handleImageLoad(photo.id)}
-                  onError={() => handleImageError(photo.id)}
-                  style={{ 
-                    display: 'block',
-                    width: '100%',
-                    height: 'auto'
-                  }}
-                />
-              </div>
-              
-              {/* Featured badge with entrance animation */}
-              {photo.featured && loadedImages.has(photo.id) && (
-                <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-slideInLeft" style={{ animationDelay: '600ms' }}>
-                  Featured
+                {/* Main image - always render but control visibility */}
+                <div className="relative">
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    className={`w-full h-auto object-cover transition-all duration-1000 ease-out group-hover:scale-105 rounded-lg ${
+                      imageState === 'loaded' 
+                        ? 'opacity-100 blur-0 scale-100' 
+                        : 'opacity-0 blur-sm scale-105 absolute inset-0'
+                    }`}
+                    loading="lazy"
+                    decoding="async"
+                    onLoadStart={() => handleImageLoadStart(photo.id)}
+                    onLoad={() => handleImageLoad(photo.id)}
+                    onError={() => handleImageError(photo.id)}
+                    style={{ 
+                      display: 'block',
+                      width: '100%',
+                      height: 'auto'
+                    }}
+                  />
                 </div>
-              )}
-              
-              {/* Enhanced overlay with staggered animations */}
-              {loadedImages.has(photo.id) && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out flex items-end rounded-lg">
-                  <div className="p-6 text-white transform translate-y-8 group-hover:translate-y-0 transition-all duration-700 ease-out delay-100">
-                    <h3 
-                      className="font-light text-lg mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-all duration-500 delay-200 transform translate-y-4 group-hover:translate-y-0"
-                      title={photo.title}
-                    >
-                      {truncateText(photo.title, 30)}
-                    </h3>
-                    <p 
-                      className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-4 group-hover:translate-y-0"
-                      title={photo.description}
-                    >
-                      {truncateText(photo.description, 80)}
-                    </p>
+                
+                {/* Featured badge - only show when image is loaded */}
+                {photo.featured && imageState === 'loaded' && (
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-slideInLeft" style={{ animationDelay: '600ms' }}>
+                    Featured
                   </div>
-                </div>
-              )}
+                )}
+                
+                {/* Enhanced overlay - only show when image is loaded */}
+                {imageState === 'loaded' && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out flex items-end rounded-lg">
+                    <div className="p-6 text-white transform translate-y-8 group-hover:translate-y-0 transition-all duration-700 ease-out delay-100">
+                      <h3 
+                        className="font-light text-lg mb-2 tracking-wide opacity-0 group-hover:opacity-100 transition-all duration-500 delay-200 transform translate-y-4 group-hover:translate-y-0"
+                        title={photo.title}
+                      >
+                        {truncateText(photo.title, 30)}
+                      </h3>
+                      <p 
+                        className="text-gray-200 text-sm font-light leading-relaxed opacity-0 group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-4 group-hover:translate-y-0"
+                        title={photo.description}
+                      >
+                        {truncateText(photo.description, 80)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Loading spinner for infinite scroll */}
