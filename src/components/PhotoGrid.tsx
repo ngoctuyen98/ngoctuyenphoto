@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import PhotoModal from './PhotoModal';
 import LoadingSpinner from './LoadingSpinner';
@@ -183,23 +184,13 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
         `}
       </style>
       
-      <div 
-        className="masonry-grid"
-        style={{
-          columnCount: 'auto',
-          columnWidth: '300px',
-          columnGap: '20px',
-          columnFill: 'balance'
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {displayedPhotos.map((photo, index) => (
           <div 
             key={photo.id}
-            className="group cursor-pointer relative overflow-hidden break-inside-avoid mb-5 bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
+            className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
             onClick={() => setSelectedPhoto(photo)}
             style={{ 
-              pageBreakInside: 'avoid', 
-              breakInside: 'avoid',
               animationDelay: `${(index % 6) * 100}ms`,
               animation: 'fadeInUp 0.8s ease-out forwards',
               opacity: 0
