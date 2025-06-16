@@ -177,34 +177,45 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
             animation: slideInLeft 0.6s ease-out forwards;
           }
 
-          .masonry-grid {
-            column-count: 1;
-            column-gap: 1.25rem;
+          .fluid-masonry {
+            columns: 1;
+            column-gap: 1.5rem;
             column-fill: balance;
           }
 
           @media (min-width: 768px) {
-            .masonry-grid {
-              column-count: 2;
+            .fluid-masonry {
+              columns: 2;
             }
           }
 
           @media (min-width: 1024px) {
-            .masonry-grid {
-              column-count: 3;
+            .fluid-masonry {
+              columns: 3;
+            }
+          }
+
+          @media (min-width: 1280px) {
+            .fluid-masonry {
+              columns: 4;
             }
           }
 
           .masonry-item {
             break-inside: avoid;
-            margin-bottom: 1.25rem;
-            display: inline-block;
+            page-break-inside: avoid;
+            display: block;
             width: 100%;
+            margin-bottom: 1.5rem;
+          }
+
+          .masonry-item:last-child {
+            margin-bottom: 0;
           }
         `}
       </style>
       
-      <div className="masonry-grid">
+      <div className="fluid-masonry">
         {displayedPhotos.map((photo, index) => {
           const imageState = getImageState(photo.id);
           
