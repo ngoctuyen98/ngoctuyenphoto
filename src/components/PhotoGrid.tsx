@@ -75,11 +75,7 @@ interface PhotoGridProps {
 const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [imageStates, setImageStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
-  const [columnHeights, setColumnHeights] = useState<number[]>([]);
-  const [itemPositions, setItemPositions] = useState<Record<string, { x: number; y: number; column: number }>>({});
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [columnCount, setColumnCount] = useState(1);
 
   // Use passed photos or fall back to default photos, sort by featured status
   const allPhotos = photos.length > 0 ? photos.sort((a, b) => {
@@ -99,94 +95,14 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
     threshold: 200
   });
 
-  // Calculate responsive column count
-  useEffect(() => {
-    const updateLayout = () => {
-      if (!containerRef.current) return;
-      
-      const width = containerRef.current.offsetWidth;
-      setContainerWidth(width);
-      
-      let cols = 1;
-      if (width >= 1280) cols = 4;
-      else if (width >= 1024) cols = 3;
-      else if (width >= 768) cols = 2;
-      else cols = 1;
-      
-      setColumnCount(cols);
-      setColumnHeights(new Array(cols).fill(0));
-    };
-
-    updateLayout();
-    window.addEventListener('resize', updateLayout);
-    return () => window.removeEventListener('resize', updateLayout);
-  }, []);
-
-  // Calculate positions only for new items
-  useEffect(() => {
-    if (columnCount === 0 || !containerRef.current) return;
-
-    const gap = 24;
-    const columnWidth = (containerWidth - (gap * (columnCount - 1))) / columnCount;
-
-    // Only process photos that don't have positions yet
-    const newPhotos = displayedPhotos.filter(photo => !itemPositions[photo.id]);
-    
-    if (newPhotos.length === 0) return;
-
-    console.log('Positioning new photos:', newPhotos.length);
-
-    const updatedPositions = { ...itemPositions };
-    const updatedHeights = [...columnHeights];
-
-    newPhotos.forEach((photo) => {
-      // Find the shortest column
-      const shortestColumnIndex = updatedHeights.indexOf(Math.min(...updatedHeights));
-      
-      const x = shortestColumnIndex * (columnWidth + gap);
-      const y = updatedHeights[shortestColumnIndex];
-      
-      updatedPositions[photo.id] = {
-        x,
-        y,
-        column: shortestColumnIndex
-      };
-      
-      // Estimate height for positioning (will be updated when image loads)
-      const estimatedHeight = 300; // Default estimated height
-      updatedHeights[shortestColumnIndex] += estimatedHeight + gap;
-    });
-
-    setItemPositions(updatedPositions);
-    setColumnHeights(updatedHeights);
-  }, [displayedPhotos, columnCount, containerWidth]);
-
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
 
-  const handleImageLoad = (photoId: string, event: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleImageLoad = (photoId: string) => {
     console.log('Image loaded:', photoId);
     setImageStates(prev => ({ ...prev, [photoId]: 'loaded' }));
-    
-    // Update the actual height for this image
-    const img = event.target as HTMLImageElement;
-    const actualHeight = img.offsetHeight;
-    
-    if (itemPositions[photoId]) {
-      const position = itemPositions[photoId];
-      const updatedHeights = [...columnHeights];
-      
-      // Calculate the difference between estimated and actual height
-      const estimatedHeight = 300;
-      const heightDifference = actualHeight - estimatedHeight;
-      
-      // Update only the height of this column and columns that come after this image
-      updatedHeights[position.column] = position.y + actualHeight + 24;
-      
-      setColumnHeights(updatedHeights);
-    }
   };
 
   const handleImageError = (photoId: string) => {
@@ -202,8 +118,6 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
   const getImageState = (photoId: string) => {
     return imageStates[photoId] || 'loading';
   };
-
-  const containerHeight = Math.max(...columnHeights) || 0;
 
   return (
     <>
@@ -264,30 +178,47 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
             animation: slideInLeft 0.6s ease-out forwards;
           }
 
-          .masonry-container {
-            position: relative;
-            width: 100%;
+          .masonry-grid {
+            column-count: 4;
+            column-gap: 24px;
+            column-fill: balance;
+          }
+
+          @media (max-width: 1280px) {
+            .masonry-grid {
+              column-count: 3;
+            }
+          }
+
+          @media (max-width: 1024px) {
+            .masonry-grid {
+              column-count: 2;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .masonry-grid {
+              column-count: 1;
+            }
           }
 
           .masonry-item {
-            position: absolute;
-            transition: opacity 0.8s ease-out;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            margin-bottom: 24px;
+            display: inline-block;
+            width: 100%;
           }
         `}
       </style>
       
       <div 
         ref={containerRef}
-        className="masonry-container"
-        style={{ height: `${containerHeight}px` }}
+        className="masonry-grid"
       >
         {displayedPhotos.map((photo, index) => {
           const imageState = getImageState(photo.id);
-          const position = itemPositions[photo.id];
-          
-          if (!position) return null;
-
-          const columnWidth = (containerWidth - (24 * (columnCount - 1))) / columnCount;
           
           return (
             <div 
@@ -295,9 +226,6 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
               className="masonry-item group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
               onClick={() => setSelectedPhoto(photo)}
               style={{ 
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                width: `${columnWidth}px`,
                 animationDelay: `${(index % 6) * 100}ms`,
                 animation: 'fadeInUp 0.8s ease-out forwards',
                 opacity: 0
@@ -342,7 +270,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                     loading="lazy"
                     decoding="async"
                     onLoadStart={() => handleImageLoadStart(photo.id)}
-                    onLoad={(e) => handleImageLoad(photo.id, e)}
+                    onLoad={() => handleImageLoad(photo.id)}
                     onError={() => handleImageError(photo.id)}
                     style={{ 
                       display: 'block',
