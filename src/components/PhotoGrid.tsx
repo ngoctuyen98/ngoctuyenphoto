@@ -121,101 +121,9 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
 
   return (
     <>
-      <style>
-        {`
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-
-          @keyframes slideInLeft {
-            from {
-              opacity: 0;
-              transform: translateX(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-
-          @keyframes gradient {
-            0% {
-              background-position: 0% 50%;
-            }
-            50% {
-              background-position: 100% 50%;
-            }
-            100% {
-              background-position: 0% 50%;
-            }
-          }
-
-          .animate-gradient {
-            animation: gradient 3s ease infinite;
-          }
-
-          .animate-fadeIn {
-            animation: fadeIn 0.5s ease-out forwards;
-          }
-
-          .animate-slideInLeft {
-            animation: slideInLeft 0.6s ease-out forwards;
-          }
-
-          .masonry-grid {
-            column-count: 4;
-            column-gap: 24px;
-            column-fill: balance;
-          }
-
-          @media (max-width: 1280px) {
-            .masonry-grid {
-              column-count: 3;
-            }
-          }
-
-          @media (max-width: 1024px) {
-            .masonry-grid {
-              column-count: 2;
-            }
-          }
-
-          @media (max-width: 768px) {
-            .masonry-grid {
-              column-count: 1;
-            }
-          }
-
-          .masonry-item {
-            break-inside: avoid;
-            page-break-inside: avoid;
-            -webkit-column-break-inside: avoid;
-            margin-bottom: 24px;
-            display: inline-block;
-            width: 100%;
-          }
-        `}
-      </style>
-      
       <div 
         ref={containerRef}
-        className="masonry-grid"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {displayedPhotos.map((photo, index) => {
           const imageState = getImageState(photo.id);
@@ -223,12 +131,10 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
           return (
             <div 
               key={photo.id}
-              className="masonry-item group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl"
+              className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]"
               onClick={() => setSelectedPhoto(photo)}
               style={{ 
-                animationDelay: `${(index % 6) * 100}ms`,
-                animation: 'fadeInUp 0.8s ease-out forwards',
-                opacity: 0
+                animationDelay: `${(index % 6) * 100}ms`
               }}
             >
               <div className="relative overflow-hidden">
@@ -236,7 +142,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 {imageState === 'loading' && (
                   <div className="relative">
                     <Skeleton className="w-full h-64 rounded-lg" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_400%] animate-gradient rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_400%] animate-[gradient_3s_ease_infinite] rounded-lg">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="flex flex-col items-center space-y-2">
                           <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
@@ -251,8 +157,8 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 {imageState === 'error' && (
                   <div className="bg-gray-50 rounded-lg flex items-center justify-center min-h-[200px] transition-all duration-500">
                     <div className="text-gray-400 text-sm text-center p-4">
-                      <div className="mb-2 opacity-0 animate-fadeIn" style={{ animationDelay: '200ms' }}>Failed to load image</div>
-                      <div className="text-xs opacity-0 animate-fadeIn" style={{ animationDelay: '400ms' }}>{photo.title}</div>
+                      <div className="mb-2 opacity-0 animate-[fadeIn_0.5s_ease-out_0.2s_forwards]">Failed to load image</div>
+                      <div className="text-xs opacity-0 animate-[fadeIn_0.5s_ease-out_0.4s_forwards]">{photo.title}</div>
                     </div>
                   </div>
                 )}
@@ -282,7 +188,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 
                 {/* Featured badge - only show when image is loaded */}
                 {photo.featured && imageState === 'loaded' && (
-                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-slideInLeft" style={{ animationDelay: '600ms' }}>
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-[slideInLeft_0.6s_ease-out_0.6s_forwards]">
                     Featured
                   </div>
                 )}
@@ -331,6 +237,51 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
           onClose={() => setSelectedPhoto(null)} 
         />
       )}
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes gradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+      `}</style>
     </>
   );
 };
