@@ -138,11 +138,11 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 animationFillMode: 'forwards'
               }}
             >
-              <div className="relative overflow-hidden">
+              <div className="relative overflow-hidden aspect-[4/3]">
                 {/* Loading skeleton - show when loading */}
                 {imageState === 'loading' && (
-                  <div className="relative">
-                    <Skeleton className="w-full h-64 rounded-lg" />
+                  <div className="absolute inset-0">
+                    <Skeleton className="w-full h-full rounded-lg" />
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-pulse">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="flex flex-col items-center space-y-2">
@@ -156,7 +156,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 
                 {/* Error fallback - show when error */}
                 {imageState === 'error' && (
-                  <div className="bg-gray-50 rounded-lg flex items-center justify-center min-h-[200px] transition-all duration-500">
+                  <div className="absolute inset-0 bg-gray-50 rounded-lg flex items-center justify-center transition-all duration-500">
                     <div className="text-gray-400 text-sm text-center p-4">
                       <div className="mb-2 opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>Failed to load image</div>
                       <div className="text-xs opacity-0 animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>{photo.title}</div>
@@ -165,27 +165,20 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 )}
 
                 {/* Main image - always render but control visibility */}
-                <div className="relative">
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    className={`w-full h-auto object-cover transition-all duration-1000 ease-out group-hover:scale-105 rounded-lg ${
-                      imageState === 'loaded' 
-                        ? 'opacity-100 blur-0 scale-100' 
-                        : 'opacity-0 blur-sm scale-105 absolute inset-0'
-                    }`}
-                    loading="lazy"
-                    decoding="async"
-                    onLoadStart={() => handleImageLoadStart(photo.id)}
-                    onLoad={() => handleImageLoad(photo.id)}
-                    onError={() => handleImageError(photo.id)}
-                    style={{ 
-                      display: 'block',
-                      width: '100%',
-                      height: 'auto'
-                    }}
-                  />
-                </div>
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-105 rounded-lg ${
+                    imageState === 'loaded' 
+                      ? 'opacity-100 blur-0' 
+                      : 'opacity-0 blur-sm'
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                  onLoadStart={() => handleImageLoadStart(photo.id)}
+                  onLoad={() => handleImageLoad(photo.id)}
+                  onError={() => handleImageError(photo.id)}
+                />
                 
                 {/* Featured badge - only show when image is loaded */}
                 {photo.featured && imageState === 'loaded' && (
