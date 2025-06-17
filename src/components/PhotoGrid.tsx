@@ -131,10 +131,11 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
           return (
             <div 
               key={photo.id}
-              className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl opacity-0 animate-[fadeInUp_0.8s_ease-out_forwards]"
+              className="group cursor-pointer relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-100 transform transition-all duration-700 ease-out hover:scale-[1.02] hover:shadow-xl opacity-0 animate-fade-in-up"
               onClick={() => setSelectedPhoto(photo)}
               style={{ 
-                animationDelay: `${(index % 6) * 100}ms`
+                animationDelay: `${(index % 6) * 100}ms`,
+                animationFillMode: 'forwards'
               }}
             >
               <div className="relative overflow-hidden">
@@ -142,7 +143,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 {imageState === 'loading' && (
                   <div className="relative">
                     <Skeleton className="w-full h-64 rounded-lg" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_400%] animate-[gradient_3s_ease_infinite] rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-pulse">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="flex flex-col items-center space-y-2">
                           <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
@@ -157,8 +158,8 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 {imageState === 'error' && (
                   <div className="bg-gray-50 rounded-lg flex items-center justify-center min-h-[200px] transition-all duration-500">
                     <div className="text-gray-400 text-sm text-center p-4">
-                      <div className="mb-2 opacity-0 animate-[fadeIn_0.5s_ease-out_0.2s_forwards]">Failed to load image</div>
-                      <div className="text-xs opacity-0 animate-[fadeIn_0.5s_ease-out_0.4s_forwards]">{photo.title}</div>
+                      <div className="mb-2 opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>Failed to load image</div>
+                      <div className="text-xs opacity-0 animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>{photo.title}</div>
                     </div>
                   </div>
                 )}
@@ -188,7 +189,8 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
                 
                 {/* Featured badge - only show when image is loaded */}
                 {photo.featured && imageState === 'loaded' && (
-                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-[slideInLeft_0.6s_ease-out_0.6s_forwards]">
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-3 py-1 text-xs tracking-[0.1em] uppercase font-light z-10 rounded shadow-lg opacity-0 animate-slide-in-left"
+                       style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
                     Featured
                   </div>
                 )}
@@ -238,50 +240,52 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
         />
       )}
 
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
           }
-          to {
-            opacity: 1;
-          }
-        }
 
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
+          @keyframes slide-in-left {
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
 
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
+          .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out;
           }
-          50% {
-            background-position: 100% 50%;
+
+          .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
           }
-          100% {
-            background-position: 0% 50%;
+
+          .animate-slide-in-left {
+            animation: slide-in-left 0.6s ease-out;
           }
-        }
-      `}</style>
+        `
+      }} />
     </>
   );
 };
