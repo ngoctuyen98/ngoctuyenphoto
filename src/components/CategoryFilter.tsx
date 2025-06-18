@@ -1,3 +1,4 @@
+
 interface CategoryFilterProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
@@ -13,12 +14,17 @@ const categories = [
 ];
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterProps) => {
+  const handleCategoryChange = (categoryId: string) => {
+    console.log('Category changed to:', categoryId);
+    onCategoryChange(categoryId);
+  };
+
   return (
     <div className="flex flex-wrap justify-center gap-4 mb-12">
       {categories.map((category) => (
         <button
           key={category.id}
-          onClick={() => onCategoryChange(category.id)}
+          onClick={() => handleCategoryChange(category.id)}
           className={`px-6 py-2 font-light tracking-wide transition-all duration-300 ${
             selectedCategory === category.id
               ? 'bg-gray-900 text-white'

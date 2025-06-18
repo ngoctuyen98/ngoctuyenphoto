@@ -126,7 +126,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
     return (
       <div 
         key={photo.id}
-        className="group cursor-pointer relative overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100 transform transition-all duration-300 ease-out opacity-0 animate-fade-in-up mb-6"
+        className="group cursor-pointer relative overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100 transform transition-all duration-300 ease-out opacity-0 animate-fade-in-up"
         onClick={() => setSelectedPhoto(photo)}
         style={{ 
           animationDelay: `${(index % 6) * 100}ms`,
