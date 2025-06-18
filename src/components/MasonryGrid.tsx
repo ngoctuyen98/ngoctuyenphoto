@@ -15,7 +15,7 @@ interface MasonryGridProps {
 const MasonryGrid = ({ 
   children, 
   columnCount = { default: 4, 1536: 3, 1024: 2, 640: 1 },
-  gap = 24 
+  gap = 16 
 }: MasonryGridProps) => {
   const [columns, setColumns] = useState<React.ReactNode[][]>([]);
   const containerRef = useRef<HTMLDivElement>(null);

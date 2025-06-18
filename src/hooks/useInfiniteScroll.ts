@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 interface UseInfiniteScrollProps {
@@ -17,13 +16,14 @@ export const useInfiniteScroll = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // Initialize with first batch
+  // Initialize with first batch and reset when items change
   useEffect(() => {
     console.log('Initializing infinite scroll with items:', items.length);
     const initialItems = items.slice(0, itemsPerPage);
     setDisplayedItems(initialItems);
     setCurrentPage(1);
     setHasMore(items.length > itemsPerPage);
+    setLoading(false); // Reset loading state when items change
   }, [items, itemsPerPage]);
 
   const loadMoreItems = useCallback(() => {

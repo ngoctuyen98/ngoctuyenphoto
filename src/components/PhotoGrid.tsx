@@ -217,7 +217,7 @@ const PhotoGrid = ({ photos = [], selectedCategory = 'all' }: PhotoGridProps) =>
   return (
     <>
       <div ref={containerRef}>
-        <MasonryGrid>
+        <MasonryGrid gap={16}>
           {photoItems}
         </MasonryGrid>
       </div>
